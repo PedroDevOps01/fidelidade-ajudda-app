@@ -696,6 +696,7 @@ const styles = StyleSheet.create({
   },
   segmentedButtons: {
     marginBottom: 20,
+    backgroundColor: 'ed9c83c2',
   },
   hintText: {
     fontSize: 14,

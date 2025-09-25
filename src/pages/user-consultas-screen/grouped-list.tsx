@@ -67,15 +67,27 @@ const GroupedList = ({ list, loading }: GroupedListProps) => {
         onPress={() => handleItemPress(procedimento)}
         activeOpacity={0.8}
       >
-        <View
-          style={[
-            styles.listItem,
-            {
-              backgroundColor: colors.fundo,
-              marginTop: index === 0 ? 0 : 12,
-            },
-          ]}
-        >
+   <View
+  style={[
+    styles.listItem,
+    {
+      backgroundColor: colors.onError,
+      marginTop: index === 0 ? 0 : 12,
+      borderWidth: 1,
+      borderColor: colors.primaryContainer,
+      borderRadius: 12,
+
+      // Shadow iOS
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+
+      // Shadow Android
+      elevation: 4,
+    },
+  ]}
+>
           <View style={styles.itemContent}>
             <MaterialIcons
               name={currentProcedureMethod === 'exame' ? 'science' : 'healing'}

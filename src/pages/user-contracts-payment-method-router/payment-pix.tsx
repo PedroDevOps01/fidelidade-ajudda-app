@@ -56,11 +56,12 @@ export default function PaymentPix() {
 
   async function checkPaid(cod_pagamento: string) {
     setErrorMessage('');
+    console.log('Verificando pagamento...');
     const response = await api.get(
       `/integracaoPagarMe/verificarPagamento?cod_pedido_pgm=${cod_pagamento}`,
       generateRequestHeader(authData.access_token)
     );
-
+console.log(response);
     if (response.status == 200) {
       const status = response.data.response[0]?.des_status_pgm;
       if (status === 'paid') await getSignatureDataAfterPixPaid();
@@ -75,7 +76,7 @@ export default function PaymentPix() {
     setErrorMessage('');
     if (!idFormaPagamento) return;
     setLoading(true);
-
+    console.log('Solicitando pagamento...');
     try {
       const baseData = {
         id_origem_pagamento_cpp: 8,
@@ -86,6 +87,7 @@ export default function PaymentPix() {
         id_forma_pagamento_cpp: idFormaPagamento,
       };
       const response = await api.post(`/pagamento-parcela`, baseData, generateRequestHeader(authData.access_token));
+      console.log(response);
       if (response.status === 200) setPixResponse(response.data.response);
     } catch {
       setErrorMessage('Erro ao realizar checagem de pagamento');

@@ -19,7 +19,7 @@
     <key>CFBundleShortVersionString</key>
     <string>$(MARKETING_VERSION)</string>
     <key>CFBundleSignature</key>
-    <string>????</string>
+    <string>APPL</string>
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>LSRequiresIPhoneOS</key>
@@ -35,6 +35,13 @@
     <string>Precisamos da sua localização para realizar o check-in</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Permitir acesso ao microfone para que você possa gravar mensagens de voz ao entrar em contato com o suporte pelo app.</string>
+    <key>NSLocationTemporaryUsageDescriptionDictionary</key>
+<dict>
+  <key>CheckInPurpose</key>
+  <string>Precisamos da sua localização precisa para o check-in.</string>
+</dict>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Precisamos da sua localização para check-in mesmo quando o app não estiver aberto.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Permitir acesso à galeria para que você possa selecionar uma imagem para adicioná-la ao seu produto</string>
     <key>UIAppFonts</key>
@@ -83,7 +90,7 @@
         <string>arm64</string>
     </array>
     <key>UIStatusBarStyle</key>
-    <string></string>
+    <string>UIStatusBarStyleDefault</string>
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>

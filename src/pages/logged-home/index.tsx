@@ -24,6 +24,7 @@ import { WebView } from 'react-native-webview';
 import CustomToast from '../../components/custom-toast';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { ImageBackground } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -157,6 +158,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
   }));
 
   useEffect(() => {
+    console.log('Dados do usuário atualizados:', JSON.stringify(dadosUsuarioData, null, 2));
     const isSigned = dadosUsuarioData.pessoa?.is_assinado_pes === 1 || dadosUsuarioData.pessoaDados?.is_assinado_pes === 1;
     const isLogged = !!dadosUsuarioData.user?.id_usuario_usr && !!authData.access_token;
 
@@ -320,13 +322,13 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       title: 'Nenhum agendamento',
       subtitle: 'Toque para agendar uma nova consulta',
       icon: 'event-available',
-      color: colors.primary,
+      color: colors.textcolor,
     },
     history: {
       title: 'Nenhum histórico',
       subtitle: 'Seus agendamentos aparecerão aqui',
       icon: 'history',
-      color: colors.primary,
+      color: colors.textcolor,
     },
   };
 
@@ -429,7 +431,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
         .map(
           termo => `
           <div style="margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-            <h2 style="color: #b183ff; font-size: 24px; margin-bottom: 15px; font-weight: 600; text-align: center;">
+            <h2 style="color: #AF91F9; font-size: 24px; margin-bottom: 15px; font-weight: 600; text-align: center;">
               ${termo.des_descricao_tde}
             </h2>
             <div style="font-size: 14px; color: #333; line-height: 1.6;">
@@ -459,7 +461,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             color: #333;
           }
           h2 { 
-            color: #b183ff; 
+            color: #AF91F9; 
             font-size: 18px; 
             margin-bottom: 15px; 
             font-weight: 600;
@@ -766,7 +768,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#e7d7ff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f7f7' }}>
       {showTerms ? (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
           {termsLoading ? (
@@ -824,20 +826,44 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       ) : loading ? (
         <LoadingFull title="Carregando..." />
       ) : (
-        <View style={styles.container}>
-          <View style={styles.purpleSection}>
-            <Image source={require('../../assets/images/logotransparente.png')} style={styles.logo} resizeMode="contain" />
-            <View style={styles.welcomeContainer}>
-              <Text style={styles.welcomeText}>Olá {dadosUsuarioData.pessoaDados?.des_genero_pes || ''}!!</Text>
-              <Text style={styles.subtitleText}>
-                {dadosUsuarioData.pessoaDados?.des_sexo_biologico_pes === 'M'
-                  ? 'Seja Bem Vindo.'
-                  : dadosUsuarioData.pessoaDados?.des_sexo_biologico_pes === 'F'
-                  ? 'Seja Bem Vinda.'
-                  : 'Seja Bem Vindo(a).'}
-              </Text>
-            </View>
-          </View>
+      <View style={styles.container}>
+  <LinearGradient
+    colors={['#AF91F9', '#f15c2ec2']}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={{
+      height: Platform.select({
+        ios: Platform.isPad ? SCREEN_HEIGHT * 0.2 : SCREEN_HEIGHT * 0.35,
+        android: Platform.isPad ? SCREEN_HEIGHT * 0.5 : SCREEN_HEIGHT * 0.35,
+      }),
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+      paddingTop: Platform.select({
+        ios: Platform.isPad ? 10 : 0,
+        android: Platform.isPad ? 10 : 0,
+      }),
+      }}
+  >
+    <Image
+      source={require('../../assets/images/logotransparente.png')}
+      style={styles.logo}
+      resizeMode="contain"
+    />
+    <View style={styles.welcomeContainer}>
+      <Text style={styles.welcomeText}>
+        Olá {dadosUsuarioData.pessoaDados?.des_genero_pes || ''}!!
+      </Text>
+      <Text style={styles.subtitleText}>
+        {dadosUsuarioData.pessoaDados?.des_sexo_biologico_pes === 'M'
+          ? 'Seja Bem Vindo.'
+          : dadosUsuarioData.pessoaDados?.des_sexo_biologico_pes === 'F'
+          ? 'Seja Bem Vinda.'
+          : 'Seja Bem Vindo(a).'}
+      </Text>
+    </View>
+  </LinearGradient>
+
+
           <ScrollView style={styles.whiteSection} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {error && <Text style={{ color: 'red', textAlign: 'center', marginVertical: 10 }}>{error}</Text>}
 
@@ -845,7 +871,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             {hasTelemedicine && (
               <View style={styles.sectionContainer}>
                 <View style={styles.sectionHeader}>
-                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary, marginBottom: 10 }]}>
+                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor, marginBottom: 10 }]}>
                     Telemedicina
                   </Text>
                 </View>
@@ -855,16 +881,16 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
 
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor }]}>
                   Nossos Parceiros
                 </Text>
-                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.primary }} onPress={() => navigation.navigate('ParceirosScreen', { partnerType: 'regular' })}>
+                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.textcolor }} onPress={() => navigation.navigate('ParceirosScreen', { partnerType: 'regular' })}>
                   Ver todos
                 </Button>
               </View>
               {partnersLoading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator animating={true} size="small" color={colors.primary} />
+                  <ActivityIndicator animating={true} size="small" color={colors.textcolor} />
                 </View>
               ) : parceiros.length > 0 ? (
                 <>
@@ -901,7 +927,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
 
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor }]}>
                   Marcar Consultas
                 </Text>
               </View>
@@ -926,16 +952,16 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             {/* Próximos Agendamentos */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor }]}>
                   Próximos Agendamentos
                 </Text>
-                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.primary }} onPress={() => navigate('user-schedules')}>
+                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.textcolor }} onPress={() => navigate('user-schedules')}>
                   Ver todos
                 </Button>
               </View>
 
               {schedulesLoading ? (
-                <ActivityIndicator style={{ marginTop: 10 }} color={colors.primary} />
+                <ActivityIndicator style={{ marginTop: 10 }} color={colors.textcolor} />
               ) : userSchedules.length === 0 ? (
                 <EmptyAppointmentCard type="next" onPress={() => navigate('user-schedules')} />
               ) : (
@@ -946,10 +972,10 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             {/* Histórico de Agendamentos */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor }]}>
                   Histórico de Agendamentos
                 </Text>
-                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.primary }} onPress={() => navigate('user-shcdules-history-screen')}>
+                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.textcolor }} onPress={() => navigate('user-shcdules-history-screen')}>
                   Ver histórico
                 </Button>
               </View>
@@ -1022,7 +1048,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                                 {selectedParceiro.des_parceiro_prc || 'N/A'}
                               </Text>
                             </View>
-                            <Button
+                            {/* <Button
                               mode="contained"
                               onPress={() => {
                                 setModalVisible(false);
@@ -1031,7 +1057,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                               style={styles.modalButton}
                               labelStyle={styles.modalButtonText}>
                               Ver mais detalhes
-                            </Button>
+                            </Button> */}
                             <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.modalCloseButton} labelStyle={styles.modalCloseButtonText}>
                               Fechar
                             </Button>
@@ -1056,7 +1082,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f7f7f7',
   },
   purpleSection: {
-    backgroundColor: '#b183ff',
+    backgroundColor: '#AF91F9',
     height: Platform.select({
       ios: Platform.isPad ? SCREEN_HEIGHT * 0.2 : SCREEN_HEIGHT * 0.35,
       android: Platform.isPad ? SCREEN_HEIGHT * 0.5 : SCREEN_HEIGHT * 0.35,
@@ -1070,12 +1096,12 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 200,
-    height: 150,
-    marginTop: 20,
+    height:220,
+    marginTop: -30,
   },
   welcomeContainer: {
     alignItems: 'center',
-    marginTop: -20,
+    marginTop: -50,
   },
   welcomeText: {
     fontSize: 22,
@@ -1119,7 +1145,7 @@ const styles = StyleSheet.create({
   justifyContent: 'center',       // centraliza verticalmente
   alignItems: 'center',           // centraliza horizontalmente
   minHeight: 140,                 // altura mínima
-  borderColor: '#b183ff',         // cor da borda
+  borderColor: '#AF91F9',         // cor da borda
   borderWidth: 1,                  // largura da borda
   borderRadius: 12,                // cantos arredondados (opcional)
   padding: 16,                     // espaçamento interno
@@ -1164,7 +1190,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   termsHeader: {
-    backgroundColor: '#b183ff',
+    backgroundColor: '#AF91F9',
     padding: 25,
     paddingTop: 15,
     borderBottomLeftRadius: 15,
@@ -1348,7 +1374,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   telemedicineButtonText: {
-    color: '#b183ff',
+    color: '#AF91F9',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -1365,11 +1391,11 @@ const styles = StyleSheet.create({
   },
   nextAppointmentCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#b183ff',
+    borderLeftColor: '#AF91F9',
   },
   historyCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#b183ff',
+    borderLeftColor: '#AF91F9',
   },
 
   cardContent: {

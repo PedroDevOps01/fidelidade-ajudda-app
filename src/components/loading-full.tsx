@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, Animated, Dimensions, Image } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
+import LinearGradient from 'react-native-linear-gradient';
 
 const screenHeight = Dimensions.get('window').height;
 
@@ -44,33 +45,47 @@ const LoadingFull = () => {
     }
   }, [imageLoaded]);
 
-  const fillHeight = fillAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 400],
-  });
+
+  const translateY = fillAnim.interpolate({
+  inputRange: [0, 1],
+  outputRange: [400, 0], // começa embaixo, sobe pra cima
+});
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       {!imageLoaded && (
-        <View style={[styles.placeholder, { width: 400, height: 400 }]} />
+        <View style={[styles.placeholder, { width: 300, height: 300 }]} />
       )}
-      <MaskedView
-        key={restartKey} // força o remount
-        style={{ width: 400, height: 400, position: 'absolute' }}
-        maskElement={
-          <Image
-            source={require('../assets/images/iconecarregamento.png')}
-            style={{ width: 400, height: 400 }}
-            resizeMode="cover"
-            onLoad={() => {
-              setImageLoaded(true);
-            }}
-          />
-        }
-      >
-        <View style={styles.background} />
-        <Animated.View style={[styles.fill, { height: fillHeight, width: 400 }]} />
-      </MaskedView>
+     <MaskedView
+  key={restartKey} // força o remount
+  style={{ width: 300, height: 300, position: 'absolute' }}
+  maskElement={
+    <Image
+      source={require('../assets/images/logotransparente.png')}
+      style={{ width: 300, height: 300 }}
+      resizeMode="cover"
+      onLoad={() => {
+        setImageLoaded(true);
+      }}
+    />
+  }
+>
+  <View style={styles.background} />
+  <Animated.View style={[{
+  position: 'absolute',
+  bottom: 0,
+  width: 400,
+  height: 400,
+  transform: [{ translateY }],
+}]}>
+    <LinearGradient
+      colors={['#AF91F9', '#ED9C83']} // aqui você define as cores do gradient
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={{ flex: 1 }}
+    />
+  </Animated.View>
+</MaskedView>
     </Animated.View>
   );
 };
@@ -80,7 +95,7 @@ export default LoadingFull;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e7d7ff',
+    backgroundColor: '#f7f7f7',
     justifyContent: 'center',
     alignItems: 'center',
         zIndex: 999,
@@ -97,6 +112,6 @@ const styles = StyleSheet.create({
   fill: {
     position: 'absolute',
     bottom: 0,
-    backgroundColor: '#b183ff',
+    backgroundColor: '#f7f7f7',
   },
 });

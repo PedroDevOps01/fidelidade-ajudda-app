@@ -49,7 +49,7 @@ export default function UserMdvHome({ navigation }: { navigation: any }) {
       title: 'Minhas Vendas',
       headerTitleAlign: 'center',
       headerStyle: { 
-        backgroundColor: colors.primary,
+        backgroundColor: colors.primaryContainer,
         elevation: 0,
         shadowOpacity: 0,
       },

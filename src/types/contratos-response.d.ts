@@ -5,6 +5,8 @@ type ContratoResponse = {
   vlr_inicial_ctt: number;
   is_ativo_ctt: number;
   id_contrato_ctt: number;
+      inclui_telemedicina_pla: number;
+
   dth_cadastro_ctt: string;
   des_origem_ori: string;
   des_descricao_tsi: string;

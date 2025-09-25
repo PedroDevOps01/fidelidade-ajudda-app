@@ -36,39 +36,48 @@ export default function TotalSalesValue({ salesData, currentMdv }: { salesData: 
       : [];
 
   async function getTotalSalesAvailable() {
-    setLoading(true);
-    setAvailableAmount(0);
-    try {
-      const response = await api.get(`/dashboard/saldo_conta_vendas/${currentMdv}`, generateRequestHeader(authData.access_token));
+  setLoading(true);
+  try {
+    const response = await api.get(
+      `/dashboard/saldo_conta_vendas/${currentMdv}`,
+      generateRequestHeader(authData.access_token)
+    );
 
-      if (response.status === 200) {
-        const data = response.data;
+    if (response.status === 200) {
+      const data = response.data;
 
-        if (data.data.original.error) {
-          CustomToast(`Erro ao obter dados de vendas: ${data.data.original.error}`, colors, 'error');
-          return;
-        }
-
-        if (data.data.original.available_amount) {
-          setAvailableAmount(data.data.original.available_amount);
-          return;
-        }
+      if (data.data.original.error) {
+        CustomToast(`Erro ao obter dados de vendas: ${data.data.original.error}`, colors, 'error');
+        return;
       }
 
-      console.log('Transferindo valor total de vendas...');
-    } catch (error) {
-      console.error('Erro ao transferir valor total de vendas:', error);
-    } finally {
-      setLoading(false);
+      if (typeof data.data.original.available_amount === 'number') {
+        setAvailableAmount(data.data.original.available_amount);
+        console.log(
+          '💰 Valor disponível para saque:',
+          maskBrazilianCurrency(data.data.original.available_amount)
+        );
+        return;
+      }
     }
+
+    console.log('Nenhum valor retornado para saque.');
+  } catch (error) {
+    console.error('Erro ao obter valor disponível para saque:', error);
+  } finally {
+    setLoading(false);
   }
+}
 
-  useEffect(() => {
-    (async () => {
-      await getTotalSalesAvailable();
-    })();
-  }, [currentMdv]);
 
+ useEffect(() => {
+  (async () => {
+    await getTotalSalesAvailable();
+  })();
+}, [currentMdv]);
+useEffect(() => {
+  console.log('🔎 availableAmount atualizado:', availableAmount);
+}, [availableAmount]);
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
       {/* Título */}
@@ -78,27 +87,33 @@ export default function TotalSalesValue({ salesData, currentMdv }: { salesData: 
       {salesData.length > 0 && (
         <View style={styles.chartContainer}>
           <BarChart
-            data={barChartData}
-            barWidth={40}
-            spacing={40}
-            roundedTop
-            roundedBottom
-            hideRules
-            xAxisThickness={0}
-            yAxisThickness={0}
-            yAxisTextStyle={{ color: colors.onSurface, fontSize: 9 }}
-            noOfSections={4}
-            maxValue={Math.max(...barChartData.map(item => item.value)) * 1.2}
-            // ✅ gera os labels já formatados em reais
-            yAxisLabelTexts={Array.from({ length: 5 }, (_, i) => maskBrazilianCurrency(Math.round((Math.max(...barChartData.map(item => item.value)) * 1.2 * i) / 4)))}
-            renderTooltip={(item: any, index: number) => {
-              return (
-                <View style={[styles.tooltip, { backgroundColor: colors.elevation.level3 }]}>
-                  <Text style={{ color: colors.onSurface, fontSize: 12 }}>{maskBrazilianCurrency(item.value)}</Text>
-                </View>
-              );
-            }}
-          />
+  data={barChartData}
+  barWidth={40}
+  spacing={40}
+  roundedTop
+  roundedBottom
+  hideRules
+  xAxisThickness={0}
+  yAxisThickness={0}
+  yAxisTextStyle={{ color: colors.onSurface, fontSize: 9 }}
+  noOfSections={4}
+  // ✅ força um mínimo de 1 para não esconder valores baixos
+  maxValue={Math.max(1, Math.max(...barChartData.map(item => item.value)) * 1.2)}
+  yAxisLabelTexts={Array.from({ length: 5 }, (_, i) =>
+    maskBrazilianCurrency(
+      Math.round(
+        (Math.max(1, Math.max(...barChartData.map(item => item.value)) * 1.2) * i) / 4
+      )
+    )
+  )}
+  renderTooltip={(item: any) => (
+    <View style={[styles.tooltip, { backgroundColor: colors.elevation.level3 }]}>
+      <Text style={{ color: colors.onSurface, fontSize: 12 }}>
+        {maskBrazilianCurrency(item.value)}
+      </Text>
+    </View>
+  )}
+/>
         </View>
       )}
 
@@ -142,7 +157,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     marginBottom: 16,
-    
+
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
@@ -155,8 +170,8 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    textAlign:'center',
-       marginBottom: 36,
+    textAlign: 'center',
+    marginBottom: 36,
   },
   chartContainer: {
     height: 200,

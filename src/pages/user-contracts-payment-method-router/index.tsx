@@ -33,20 +33,42 @@ export default function UserContractsPaymentMethodRouter() {
   console.log('plano detalhado', plano);
   // 1 - Obter os dados do plano OK
   async function getPlanoPagamentoData() {
-    try {
-      const response = await api.get(`/plano-pagamento?id_forma_pagamento_ppg=${idFormaPagamento}&is_ativo_ppg=1`, generateRequestHeader(authData.access_token));
-      const { data } = response;
-      console.log('1 - getPlanoPagamentoData', data.response.data);
-      if (data.response.data.length > 0) {
-        createContrato(data.response.data[0]);
-        setLoadingMessage('Obtendo informações');
+  try {
+    const response = await api.get(
+      `/plano-pagamento?id_forma_pagamento_ppg=${idFormaPagamento}&is_ativo_ppg=1`,
+      generateRequestHeader(authData.access_token)
+    );
+
+    const { data } = response;
+    console.log('1 - getPlanoPagamentoData', data.response.data);
+if (!plano) {
+  setAlertErrorMessage('Nenhum plano selecionado!');
+  setLoading(false);
+  return;
+}
+
+    if (data.response.data.length > 0) {
+      // Filtra pelo id do plano correto
+const planoCorreto = data.response.data.find(
+  (p: any) => plano && p.id_plano_ppg === plano.id_plano_pla
+);
+
+      if (!planoCorreto) {
+        setAlertErrorMessage('Plano de pagamento não encontrado para este plano!');
+        console.log('Plano de pagamento não encontrado para este plano!');
+        return;
       }
-    } catch (err) {
-      console.log('1 - err', err);
-      Alert.alert('Erro', 'Erro ao carregar dados. Tente novamente mais tarde');
-      setAlertErrorMessage('erro 1');
+
+      createContrato(planoCorreto);
+      setLoadingMessage('Obtendo informações');
     }
+  } catch (err) {
+    console.log('1 - err', err);
+    Alert.alert('Erro', 'Erro ao carregar dados. Tente novamente mais tarde');
+    setAlertErrorMessage('erro 1');
   }
+}
+
 
   // 2 - Criar o contrato
   async function createContrato(planoPagamento: PlanoPagamento) {

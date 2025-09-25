@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert, Linking, Image, Animated, Easing } from 'react-native';
 import { Card, Text, Avatar, useTheme, IconButton, ProgressBar } from 'react-native-paper';
-import Geolocation from '@react-native-community/geolocation';
+// import Geolocation from '@react-native-community/geolocation';
 import { applyPhoneMask, formatDateToDDMMYYYY } from '../../utils/app-utils';
 import { api } from '../../network/api';
 import { generateRequestHeader } from '../../utils/app-utils';
 import { useAuth } from '../../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform, PermissionsAndroid } from 'react-native';
-import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions';
+// import { Platform, PermissionsAndroid } from 'react-native';
+// import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions';
 
 type Props = {
   index: number;
@@ -43,6 +43,8 @@ const UserScheduleCard = (props: Props) => {
     outputRange: ['0deg', '180deg'],
   });
 
+  // Função comentada: Solicitação de permissões de localização
+  /*
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
       const status = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
@@ -60,22 +62,24 @@ const UserScheduleCard = (props: Props) => {
           throw new Error('Permissão de localização negada ou bloqueada');
         }
       }
-      if (Platform.OS === 'ios' && parseFloat(Platform.Version) >= 14) {
-        const accuracyStatus = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-        if (accuracyStatus === RESULTS.GRANTED) {
-          const accuracyResult = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE, {
-            purpose: 'CheckInPurpose',
-          });
-          if (accuracyResult !== 'full') {
-            throw new Error('Localização precisa não autorizada. Por favor, permita a localização precisa para o check-in.');
+      if (Platform.OS === 'ios' && parseInt(Platform.Version, 10) >= 14) {
+        Geolocation.requestTemporaryFullAccuracy(
+          'CheckInPurpose'
+        ).then(level => {
+          if (level !== 'full') {
+            throw new Error('Localização precisa não autorizada. Vá em Ajustes e ative a localização precisa.');
           }
-        }
+        });
       }
     }
   };
+  */
 
-  const enderecoCompleto = `${appointment.endereco_unidade} ${appointment.numero_unidade}, ${appointment.bairro_unidade}, ${appointment.cidade_unidade} - ${appointment.estado}`;
+  // Variável comentada: Endereço completo usado para geocoding
+  // const enderecoCompleto = `${appointment.endereco_unidade} ${appointment.numero_unidade}, ${appointment.bairro_unidade}, ${appointment.cidade_unidade} - ${appointment.estado}`;
 
+  // Função comentada: Obtenção de coordenadas a partir do endereço
+  /*
   const getLatLngFromAddress = async (address: string) => {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
     try {
@@ -97,6 +101,7 @@ const UserScheduleCard = (props: Props) => {
       return null;
     }
   };
+  */
 
   useEffect(() => {
     const carregarCheckin = async () => {
@@ -108,6 +113,8 @@ const UserScheduleCard = (props: Props) => {
     carregarCheckin();
   }, []);
 
+  // Função comentada: Cálculo de distância entre duas coordenadas
+  /*
   const getDistanceFromLatLonInMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371000;
     const dLat = deg2rad(lat2 - lat1);
@@ -116,13 +123,18 @@ const UserScheduleCard = (props: Props) => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
+  */
 
+  // Função comentada: Conversão de graus para radianos
+  /*
   const deg2rad = (deg: number) => deg * (Math.PI / 180);
+  */
 
   const validarCodigoAgendamento = async () => {
     try {
       const body = {
         codigoEticket: appointment.codigoValidadorAgendamento,
+        cod_parceiro: appointment.cod_parceiro, // Adiciona o cod_parceiro
       };
       console.log('🔐 access_token sendo usado:', authData.access_token);
       console.log('📤 Corpo enviado:', body);
@@ -154,6 +166,8 @@ const UserScheduleCard = (props: Props) => {
   };
 
   const handleChecking = async () => {
+    // Comentado: Verificação de permissões de localização
+    /*
     try {
       await requestLocationPermission();
     } catch (err) {
@@ -191,6 +205,7 @@ const UserScheduleCard = (props: Props) => {
       }
       return;
     }
+    */
 
     const dataAtual = new Date();
     dataAtual.setHours(0, 0, 0, 0);
@@ -207,6 +222,8 @@ const UserScheduleCard = (props: Props) => {
     setIsLoading(true);
     setGlobalLoading(true);
 
+    // Comentado: Obtenção de coordenadas da clínica e do usuário
+    /*
     const clinicCoords = await getLatLngFromAddress(enderecoCompleto);
     if (!clinicCoords) {
       setIsLoading(false);
@@ -247,13 +264,25 @@ const UserScheduleCard = (props: Props) => {
         setGlobalLoading(false);
       },
       error => {
-        Alert.alert('Erro', 'Não foi possível obter sua localização. Por favor, desloque-se para o térreo, caso esteja em um local elevado.');
+        Alert.alert('Erro', 'Não foi possível obter sua localização. Tente novamente ou desloque-se para o térreo, caso esteja em um local elevado.', [
+          {
+            text: 'Tentar novamente',
+            onPress: () => handleChecking(), // Retry automático
+          },
+          { text: 'Cancelar', style: 'cancel' },
+        ]);
         console.error(error);
         setIsLoading(false);
         setGlobalLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
     );
+    */
+
+    // Nova lógica: Chama validarCodigoAgendamento diretamente após verificar a data
+    await validarCodigoAgendamento();
+    setIsLoading(false);
+    setGlobalLoading(false);
   };
 
   return (
@@ -323,13 +352,10 @@ const UserScheduleCard = (props: Props) => {
                       {appointment.nome_procedimento.join(', ')}
                     </Text>
                   </View>
-
-                 
                 </View>
 
                 <View style={styles.detailRow}>
-                              <IconButton icon="hospital-building" size={14} iconColor={colors.primary} style={styles.icon} />
-
+                  <IconButton icon="hospital-building" size={14} iconColor={colors.primary} style={styles.icon} />
                   <View style={styles.detailTextContainer}>
                     <Text variant="bodySmall" style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
                       CLÍNICA/HOSPITAL
@@ -338,7 +364,6 @@ const UserScheduleCard = (props: Props) => {
                       {appointment.nome_unidade}
                     </Text>
                   </View>
-                 
                 </View>
 
                 {appointment.contato_paciente && (
@@ -354,18 +379,6 @@ const UserScheduleCard = (props: Props) => {
                     </View>
                   </View>
                 )}
-
-                {/* <View style={styles.detailRow}>
-                  <IconButton icon="identifier" size={18} iconColor={colors.primary} style={styles.icon} />
-                  <View style={styles.detailTextContainer}>
-                    <Text variant="bodySmall" style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
-                      Código
-                    </Text>
-                    <Text variant="bodyMedium" style={[styles.detailValue, { color: colors.onSurface }]}>
-                      {appointment.codigoValidadorAgendamento}
-                    </Text>
-                  </View>
-                </View> */}
               </View>
 
               {/* Botões de ação */}
@@ -575,7 +588,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 15,
     fontWeight: '600',
-    marginLeft: -5,
+    marginRight: 15,
   },
 });
 

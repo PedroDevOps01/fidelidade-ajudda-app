@@ -99,7 +99,7 @@ const UserPersonalCarteirinhaScreen = ({ navigation }: { navigation: any }) => {
             {/* Logo */}
             <View style={styles.logoContainer}>
               <Image
-                source={require('../../assets/images/logonova1.png')}
+                source={require('../../assets/images/logonova.png')}
                 style={[styles.cardLogo, isZoomed && styles.zoomedLogo]}
                 resizeMode="contain"
               />
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   loginButton: {
-    backgroundColor: '#b183ff',
+    backgroundColor: '#AF91F9',
     borderRadius: 25,
     paddingVertical: 12,
     paddingHorizontal: 25,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     marginLeft: 8,
-    color: '#b183ff',
+    color: '#AF91F9',
     fontSize: 14,
   },
   landscapeWrapper: {
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#b183ff',
+    borderColor: '#AF91F9',
   },
   gradientBackground: {
     position: 'absolute',
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   cardFooter: {
-    backgroundColor: '#b183ff',
+    backgroundColor: '#AF91F9',
     padding: 12,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
@@ -403,14 +403,20 @@ const styles = StyleSheet.create({
 // Funções auxiliares mantidas iguais
 const formatarNome = (nomeCompleto?: string): string => {
   if (!nomeCompleto) return '';
+  
   const partes = nomeCompleto.trim().split(/\s+/);
-  if (partes.length === 1) return partes[0].toUpperCase();
-  const primeiro = partes[0];
-  const segundo = partes.length > 1 ? partes[1] : '';
-  const ultimo = partes[partes.length - 1];
-  return `${primeiro} ${segundo} ${ultimo}`.toUpperCase();
+  
+  if (partes.length === 1) {
+    // Apenas uma palavra
+    return partes[0].toUpperCase();
+  } else if (partes.length === 2) {
+    // Dois nomes
+    return `${partes[0]} ${partes[1]}`.toUpperCase();
+  } else {
+    // Mais de dois nomes, mostrar primeiro e último
+    return `${partes[0]} ${partes[partes.length - 1]}`.toUpperCase();
+  }
 };
-
 const formatarCPF = (cpf?: string | number): string => {
   if (!cpf) return '';
   const apenasNumeros = cpf.toString().replace(/\D/g, '').padStart(11, '0');

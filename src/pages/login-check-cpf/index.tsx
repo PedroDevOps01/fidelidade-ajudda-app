@@ -131,7 +131,7 @@ export default function LoginCheckCpf({ navigation, routeAfterLogin }: { navigat
   };
 
   return (
-    <ImageBackground source={require('../../assets/images/fundologin.jpeg')} style={styles.background} resizeMode="cover">
+    <ImageBackground source={require('../../assets/images/fundologin.png')} style={styles.background} resizeMode="cover">
 <KeyboardAwareScrollView
   keyboardShouldPersistTaps="handled"
   contentContainerStyle={styles.container}
@@ -143,15 +143,15 @@ export default function LoginCheckCpf({ navigation, routeAfterLogin }: { navigat
 
         <View style={styles.contentWrapper}>
           <View style={styles.logoContainer}>
-            <Image source={require('../../assets/images/fidelidade_logo.png')} style={{ width: width * 0.6, height: width * 0.2 }} />
+            <Image source={require('../../assets/images/logonova.png')} style={{ width: width * 0.6, height: width * 0.2 }} />
           </View>
 
           <Card style={[styles.card, { backgroundColor: colors.onSecondary }]} elevation={3}>
             <Card.Content>
-              <Text variant="headlineSmall" style={[styles.title, { color: colors.primary }]}>
+              <Text variant="headlineSmall" style={[styles.title, { color: colors.textcolor }]}>
                 Bem-vindo de volta!
               </Text>
-              <Text variant="bodyMedium" style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+              <Text variant="bodyMedium" style={[styles.subtitle, { color: colors.textcolor }]}>
                 Entre com seus dados para acessar sua conta
               </Text>
 
@@ -236,7 +236,7 @@ export default function LoginCheckCpf({ navigation, routeAfterLogin }: { navigat
                   mode="contained"
                   onPress={handleSubmit(handleLogin)}
                   loading={loading}
-                  style={[styles.button, { backgroundColor: colors.primary }]}
+                  style={[styles.button, { backgroundColor: colors.textcolor }]}
                   labelStyle={{ color: colors.onPrimary }}
                   contentStyle={styles.buttonContent}
                   disabled={!isConnected || loading}>
@@ -244,15 +244,15 @@ export default function LoginCheckCpf({ navigation, routeAfterLogin }: { navigat
                 </Button>
 
                 <View style={styles.linksContainer}>
-                  <Button mode="text" onPress={() => setIsRecoverPassworrdModalVisible(true)} style={styles.linkButton} labelStyle={{ color: colors.primary }} compact>
+                  <Button mode="text" onPress={() => setIsRecoverPassworrdModalVisible(true)} style={styles.linkButton} labelStyle={{ color: colors.textcolor1 }} compact>
                     Esqueci minha senha
                   </Button>
-                  <Text style={[styles.dividerText, { color: colors.onSurfaceVariant }]}>|</Text>
+                  <Text style={[styles.dividerText, { color: colors.textcolor1 }]}>|</Text>
                   <Button
                     mode="text"
                     onPress={() => navigation.navigate('register-step-one', { tipo: 'NEW_USER' })}
                     style={styles.linkButton}
-                    labelStyle={{ color: colors.primary }}
+                    labelStyle={{ color: colors.textcolor1 }}
                     compact>
                     Criar conta
                   </Button>

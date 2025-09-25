@@ -101,7 +101,7 @@ export default function UserProcedureTime({ navigation, route }: UserProcedureTi
 
   useEffect(() => {
     navigation.setOptions({
-      title: route.params.procedimento.empresa,
+      title: '',
       headerStyle: {
         backgroundColor: colors.primaryContainer,
       },

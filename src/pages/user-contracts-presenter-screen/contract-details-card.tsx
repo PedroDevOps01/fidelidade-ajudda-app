@@ -13,7 +13,6 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
   const { colors } = useTheme();
   const isPopular = contract.id_plano_pla === 72;
   const scaleValue = useRef(new Animated.Value(1)).current;
-  console.log(contract)
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
       toValue: 0.98,
@@ -165,9 +164,9 @@ const styles = StyleSheet.create({
     borderColor: '#EEE',
   },
   popularTouchable: {
-    backgroundColor: '#b183ff',
+    backgroundColor: '#AF91F9',
     borderColor: 'transparent',
-    shadowColor: '#b183ff',
+    shadowColor: '#AF91F9',
     shadowOpacity: 0.3,
   },
   card: {
@@ -176,7 +175,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   popularCard: {
-    backgroundColor: '#b183ff',
+    backgroundColor: '#AF91F9',
   },
   popularBadge: {
     position: 'absolute',
@@ -264,7 +263,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#b183ff',
+    backgroundColor: '#AF91F9',
   },
   popularSelectButton: {
     backgroundColor: '#FFF',
@@ -275,7 +274,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   popularSelectButtonText: {
-    color: '#b183ff',
+    color: '#AF91F9',
   },
   arrowIcon: {
     marginLeft: 8,

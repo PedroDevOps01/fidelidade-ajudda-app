@@ -182,7 +182,7 @@ const PartnersScreen = ({ navigation, route }: { navigation: any; route: any }) 
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#e7d7ff' },
+  safeArea: { flex: 1, backgroundColor: '#f7f7f7' },
   header: { padding: 20, alignItems: 'center' },
   title: { fontSize: 16, color: '#666' },
   container: { padding: 16, paddingBottom: 30 },

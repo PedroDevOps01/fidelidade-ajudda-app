@@ -105,7 +105,7 @@ const ContratosDetailScreen = ({ contrato, title }: ContratosDetailScreenProps) 
         </View>
 
         {/* Dependents Section */}
-        {/* <View style={styles.section}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dependentes</Text>
           {renderDetailItem(
             'account-multiple', 
@@ -114,7 +114,7 @@ const ContratosDetailScreen = ({ contrato, title }: ContratosDetailScreenProps) 
             () => navigate('user-dependents-screen'),
             true
           )}
-        </View> */}
+        </View>
       </ScrollView>
     </View>
   );
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#b183ff',
+    backgroundColor: '#AF91F9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,

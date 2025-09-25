@@ -136,7 +136,7 @@ useEffect(() => {
       {loading ? (
         <LoadingFull />
       ) : (
-        <View style={[styles.container, { backgroundColor: '#e7d7ff' }]}>
+        <View style={[styles.container, { backgroundColor: '#f7f7f7' }]}>
           {userSchedules.length > 0 ? (
             <FlatList
               data={userSchedules}
