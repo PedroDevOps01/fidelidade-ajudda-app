@@ -2,104 +2,106 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleDevelopmentRegion</key>
-    <string>pt-BR</string>
-    <key>CFBundleDisplayName</key>
-    <string>Ajudda</string>
-    <key>CFBundleExecutable</key>
-    <string>$(EXECUTABLE_NAME)</string>
-    <key>CFBundleIdentifier</key>
-    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-    <key>CFBundleName</key>
-    <string>$(PRODUCT_NAME)</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>$(MARKETING_VERSION)</string>
-    <key>CFBundleSignature</key>
-    <string>APPL</string>
-    <key>CFBundleVersion</key>
-    <string>$(CURRENT_PROJECT_VERSION)</string>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <key>NSAllowsArbitraryLoads</key>
-        <true/>
-    </dict>
-    <key>NSCameraUsageDescription</key>
-    <string>Este app precisa de acesso à câmera para permitir que você participe de consultas por vídeo com médicos e outros profissionais de saúde. A câmera será usada apenas durante a chamada para capturar sua imagem em tempo real.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Precisamos da sua localização para realizar o check-in</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Permitir acesso ao microfone para que você possa gravar mensagens de voz ao entrar em contato com o suporte pelo app.</string>
-    <key>NSLocationTemporaryUsageDescriptionDictionary</key>
-<dict>
-  <key>CheckInPurpose</key>
-  <string>Precisamos da sua localização precisa para o check-in.</string>
-</dict>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>Precisamos da sua localização para check-in mesmo quando o app não estiver aberto.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Permitir acesso à galeria para que você possa selecionar uma imagem para adicioná-la ao seu produto</string>
-    <key>UIAppFonts</key>
-    <array>
-        <string>Roboto-Black.ttf</string>
-        <string>Roboto-BlackItalic.ttf</string>
-        <string>Roboto-Bold.ttf</string>
-        <string>Roboto-BoldItalic.ttf</string>
-        <string>Roboto-Italic.ttf</string>
-        <string>Roboto-Light.ttf</string>
-        <string>Roboto-LightItalic.ttf</string>
-        <string>Roboto-Medium.ttf</string>
-        <string>Roboto-MediumItalic.ttf</string>
-        <string>Roboto-Regular.ttf</string>
-        <string>Roboto-Thin.ttf</string>
-        <string>Roboto-ThinItalic.ttf</string>
-        <string>AntDesign.ttf</string>
-        <string>Entypo.ttf</string>
-        <string>EvilIcons.ttf</string>
-        <string>Feather.ttf</string>
-        <string>FontAwesome.ttf</string>
-        <string>FontAwesome5_Brands.ttf</string>
-        <string>FontAwesome5_Regular.ttf</string>
-        <string>FontAwesome5_Solid.ttf</string>
-        <string>FontAwesome6_Brands.ttf</string>
-        <string>FontAwesome6_Regular.ttf</string>
-        <string>FontAwesome6_Solid.ttf</string>
-        <string>Foundation.ttf</string>
-        <string>Ionicons.ttf</string>
-        <string>MaterialIcons.ttf</string>
-        <string>MaterialCommunityIcons.ttf</string>
-        <string>SimpleLineIcons.ttf</string>
-        <string>Octicons.ttf</string>
-        <string>Zocial.ttf</string>
-        <string>Fontisto.ttf</string>
-    </array>
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>fetch</string>
-        <string>remote-notification</string>
-    </array>
-    <key>UILaunchStoryboardName</key>
-    <string>LaunchScreen</string>
-    <key>UIRequiredDeviceCapabilities</key>
-    <array>
-        <string>arm64</string>
-    </array>
-    <key>UIStatusBarStyle</key>
-    <string>UIStatusBarStyleDefault</string>
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
-    <key>UIUserInterfaceStyle</key>
-    <string>Light</string>
-    <key>UIViewControllerBasedStatusBarAppearance</key>
-    <true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>pt-BR</string>
+	<key>CFBundleDisplayName</key>
+	<string>Ajudda</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleSignature</key>
+	<string>APPL</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Este app precisa de acesso à câmera para permitir que você participe de consultas por vídeo com médicos e outros profissionais de saúde. A câmera será usada apenas durante a chamada para capturar sua imagem em tempo real.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Precisamos da sua localização para check-in mesmo quando o app não estiver aberto.</string>
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>CheckInPurpose</key>
+		<string>Precisamos da sua localização precisa para o check-in.</string>
+	</dict>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Precisamos da sua localização para realizar o check-in na clínica.</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>Precisamos da sua localização para realizar o check-in na clínica.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Permitir acesso ao microfone para que você possa gravar mensagens de voz ao entrar em contato com o suporte pelo app.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Permitir acesso à galeria para que você possa selecionar uma imagem para adicioná-la ao seu produto</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Roboto-Black.ttf</string>
+		<string>Roboto-BlackItalic.ttf</string>
+		<string>Roboto-Bold.ttf</string>
+		<string>Roboto-BoldItalic.ttf</string>
+		<string>Roboto-Italic.ttf</string>
+		<string>Roboto-Light.ttf</string>
+		<string>Roboto-LightItalic.ttf</string>
+		<string>Roboto-Medium.ttf</string>
+		<string>Roboto-MediumItalic.ttf</string>
+		<string>Roboto-Regular.ttf</string>
+		<string>Roboto-Thin.ttf</string>
+		<string>Roboto-ThinItalic.ttf</string>
+		<string>AntDesign.ttf</string>
+		<string>Entypo.ttf</string>
+		<string>EvilIcons.ttf</string>
+		<string>Feather.ttf</string>
+		<string>FontAwesome.ttf</string>
+		<string>FontAwesome5_Brands.ttf</string>
+		<string>FontAwesome5_Regular.ttf</string>
+		<string>FontAwesome5_Solid.ttf</string>
+		<string>FontAwesome6_Brands.ttf</string>
+		<string>FontAwesome6_Regular.ttf</string>
+		<string>FontAwesome6_Solid.ttf</string>
+		<string>Foundation.ttf</string>
+		<string>Ionicons.ttf</string>
+		<string>MaterialIcons.ttf</string>
+		<string>MaterialCommunityIcons.ttf</string>
+		<string>SimpleLineIcons.ttf</string>
+		<string>Octicons.ttf</string>
+		<string>Zocial.ttf</string>
+		<string>Fontisto.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDefault</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
 </dict>
 </plist>
