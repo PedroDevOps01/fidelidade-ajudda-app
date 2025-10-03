@@ -9,23 +9,35 @@ export default function NoMdvFound() {
   const { dadosUsuarioData } = useDadosUsuario();
 
   const handleButtonPress = () => {
-    if (!dadosUsuarioData.pessoaAssinatura) {
-      Alert.alert(
-        'Aviso', 
-        `É necessário ser assinante antes de se tornar um vendedor\nDeseja assinar um plano?`,
-        [
-          { text: 'Sim', onPress: () => navigate('new-contract-navigator') },
-          { text: 'Não', onPress: () => {} },
-        ]
-      );
-      return;
-    }
-    navigate('user-mdv-registration', { newAccount: true });
-  };
+  const pessoaAssinatura = dadosUsuarioData.pessoaAssinatura;
+  const isTipoContratante = dadosUsuarioData.pessoaDados?.is_tipo_contratante_pda;
+    console.log(isTipoContratante, pessoaAssinatura);
+  console.log(
+    'Dados do usuário ao tentar acessar registro MDV:',
+    JSON.stringify(dadosUsuarioData, null, 2)
+  );
+
+  // Bloqueia apenas se não for assinante e não for do tipo contratante
+  if (!pessoaAssinatura && !isTipoContratante) {
+    Alert.alert(
+      'Aviso', 
+      'É necessário ser assinante antes de se tornar um vendedor\nDeseja assinar um plano?',
+      [
+        { text: 'Sim', onPress: () => navigate('new-contract-navigator') },
+        { text: 'Não', onPress: () => {} },
+      ]
+    );
+    return;
+  }
+
+  // Se for assinante ou tipo contratante, libera
+  navigate('user-mdv-registration', { newAccount: true });
+};
+
 
   return (
     <ImageBackground
-      source={require('../../assets/images/welcome.jpeg')}
+      source={require('../../assets/images/welcome.png')}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -57,6 +69,7 @@ export default function NoMdvFound() {
 
 const styles = StyleSheet.create({
   backgroundImage: {
+    paddingTop:20,
     flex: 1,
   },
   container: {

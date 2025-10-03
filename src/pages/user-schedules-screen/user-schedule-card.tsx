@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, Linking, Image, Animated, Easing } from 'react-native';
-import { Card, Text, Avatar, useTheme, IconButton, ProgressBar } from 'react-native-paper';
-// import Geolocation from '@react-native-community/geolocation';
+import { View, StyleSheet, TouchableOpacity, Alert, Linking, Image, Animated, Easing, Platform } from 'react-native';
+import { Card, Text, IconButton, ProgressBar, useTheme } from 'react-native-paper';
+import GeolocationCommunity from '@react-native-community/geolocation'; // Para Android
+import GeolocationService from 'react-native-geolocation-service'; // Para iOS
 import { applyPhoneMask, formatDateToDDMMYYYY } from '../../utils/app-utils';
 import { api } from '../../network/api';
 import { generateRequestHeader } from '../../utils/app-utils';
 import { useAuth } from '../../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { Platform, PermissionsAndroid } from 'react-native';
-// import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions';
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
 type Props = {
   index: number;
@@ -27,7 +27,6 @@ const UserScheduleCard = (props: Props) => {
   const { authData } = useAuth();
 
   const rotateAnim = new Animated.Value(0);
-  const heightAnim = new Animated.Value(0);
 
   useEffect(() => {
     Animated.timing(rotateAnim, {
@@ -43,65 +42,43 @@ const UserScheduleCard = (props: Props) => {
     outputRange: ['0deg', '180deg'],
   });
 
-  // Função comentada: Solicitação de permissões de localização
-  /*
-  const requestLocationPermission = async () => {
-    if (Platform.OS === 'android') {
-      const status = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-      if (status === RESULTS.DENIED || status === RESULTS.BLOCKED) {
-        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          throw new Error('Permissão de localização negada ou bloqueada');
-        }
-      }
-    } else {
-      const status = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-      if (status === RESULTS.DENIED || status === RESULTS.BLOCKED) {
-        const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-        if (result !== RESULTS.GRANTED) {
-          throw new Error('Permissão de localização negada ou bloqueada');
-        }
-      }
-      if (Platform.OS === 'ios' && parseInt(Platform.Version, 10) >= 14) {
-        Geolocation.requestTemporaryFullAccuracy(
-          'CheckInPurpose'
-        ).then(level => {
-          if (level !== 'full') {
-            throw new Error('Localização precisa não autorizada. Vá em Ajustes e ative a localização precisa.');
-          }
-        });
-      }
-    }
-  };
-  */
-
-  // Variável comentada: Endereço completo usado para geocoding
-  // const enderecoCompleto = `${appointment.endereco_unidade} ${appointment.numero_unidade}, ${appointment.bairro_unidade}, ${appointment.cidade_unidade} - ${appointment.estado}`;
-
-  // Função comentada: Obtenção de coordenadas a partir do endereço
-  /*
-  const getLatLngFromAddress = async (address: string) => {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+  // Função para verificar e solicitar permissão de localização
+  const checkLocationPermission = async () => {
     try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (MyApp - contact@example.com)',
-        },
-      });
-      const data = await response.json();
-      if (data && data.length > 0) {
-        return {
-          latitude: parseFloat(data[0].lat),
-          longitude: parseFloat(data[0].lon),
-        };
+      const permission = Platform.OS === 'android' ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
+      const status = await check(permission);
+
+      console.log(`Status da permissão de localização: ${status}`);
+
+      if (status === RESULTS.DENIED) {
+        const result = await request(permission);
+        if (result !== RESULTS.GRANTED) {
+          throw new Error('Permissão de localização negada. Por favor, ative a localização nas configurações.');
+        }
+      } else if (status === RESULTS.BLOCKED) {
+        throw new Error('Permissão de localização bloqueada. Por favor, ative-a nas configurações.');
       }
-      return null;
+
+      console.log('Permissão de localização verificada com sucesso.');
+      return true;
     } catch (error) {
-      console.error('Erro no geocoding:', error);
-      return null;
+      console.log('Erro ao verificar permissão de localização:', error.message);
+      throw error;
     }
   };
-  */
+
+  // Função para calcular a distância entre duas coordenadas (em metros)
+  const getDistanceFromLatLonInMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371000; // Raio da Terra em metros
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Função para converter graus em radianos
+  const deg2rad = (deg: number) => deg * (Math.PI / 180);
 
   useEffect(() => {
     const carregarCheckin = async () => {
@@ -111,102 +88,41 @@ const UserScheduleCard = (props: Props) => {
       }
     };
     carregarCheckin();
-  }, []);
-
-  // Função comentada: Cálculo de distância entre duas coordenadas
-  /*
-  const getDistanceFromLatLonInMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371000;
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-  */
-
-  // Função comentada: Conversão de graus para radianos
-  /*
-  const deg2rad = (deg: number) => deg * (Math.PI / 180);
-  */
+  }, [appointment.agenda_exames_id]);
 
   const validarCodigoAgendamento = async () => {
     try {
       const body = {
         codigoEticket: appointment.codigoValidadorAgendamento,
-        cod_parceiro: appointment.cod_parceiro, // Adiciona o cod_parceiro
+        cod_parceiro: appointment.cod_parceiro,
       };
-      console.log('🔐 access_token sendo usado:', authData.access_token);
-      console.log('📤 Corpo enviado:', body);
-
+      console.log('Enviando validação de agendamento:', body);
       const response = await api.post(`/integracao/validarCodigoAgendamento`, body, generateRequestHeader(authData.access_token));
-      console.log('🔍 Status:', response.status);
-      console.log('📦 Response data:', response.data);
 
       if (response.status === 200) {
         await AsyncStorage.setItem(`checkin_${appointment.agenda_exames_id}`, 'true');
         setCheckinRealizado(true);
-        setTimeout(() => {
-          Alert.alert('Sucesso', response.data.text || 'Você entrou na fila de espera.');
-        }, 200);
+        Alert.alert('Sucesso', response.data.text || 'Você entrou na fila de espera.');
       } else {
         Alert.alert('Erro', response.data.text || 'Não foi possível confirmar o agendamento.');
       }
     } catch (error) {
+      let errorMessage = 'Falha na validação do código de agendamento.';
       if (error.response) {
-        console.log('🚨 Erro status:', error.response.status);
-        console.log('🚨 Erro data:', error.response.data);
+        errorMessage = error.response.data?.text || errorMessage;
       } else if (error.request) {
-        console.log('⚠️ Erro na requisição, sem resposta do servidor:', error.request);
-      } else {
-        console.error('❌ Erro desconhecido:', error.message);
+        errorMessage = 'Sem resposta do servidor. Verifique sua conexão.';
       }
-      Alert.alert('Erro', 'Falha na validação do código de agendamento.');
+      console.log('Erro na validação do agendamento:', errorMessage);
+      Alert.alert('Erro', errorMessage);
+      throw error;
     }
   };
 
   const handleChecking = async () => {
-    // Comentado: Verificação de permissões de localização
-    /*
-    try {
-      await requestLocationPermission();
-    } catch (err) {
-      if (String(err).includes('bloqueada') || String(err).includes('negada') || String(err).includes('precisa')) {
-        Alert.alert('Permissões necessárias', String(err), [
-          {
-            text: 'Tentar novamente',
-            onPress: async () => {
-              const newStatus = await check(Platform.OS === 'ios' ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-              if (newStatus === RESULTS.DENIED) {
-                const result =
-                  Platform.OS === 'android'
-                    ? await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
-                    : await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE, { purpose: 'CheckInPurpose' });
-                if (result === PermissionsAndroid.RESULTS.GRANTED || result === RESULTS.GRANTED) {
-                  handleChecking();
-                } else {
-                  Alert.alert('Permissão negada', 'Por favor, ative as permissões nas configurações.');
-                }
-              } else if (newStatus === RESULTS.GRANTED) {
-                handleChecking();
-              }
-            },
-          },
-          {
-            text: 'Abrir Configurações',
-            onPress: async () => {
-              await Linking.openSettings();
-            },
-          },
-          { text: 'Cancelar', style: 'cancel' },
-        ]);
-      } else {
-        Alert.alert('Permissões necessárias', String(err));
-      }
-      return;
-    }
-    */
+    console.log('Iniciando check-in...');
 
+    // 1. Verificar a data do agendamento
     const dataAtual = new Date();
     dataAtual.setHours(0, 0, 0, 0);
 
@@ -214,210 +130,266 @@ const UserScheduleCard = (props: Props) => {
     const dataAgendamento = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
     dataAgendamento.setHours(0, 0, 0, 0);
 
+    console.log('Data atual:', dataAtual.toISOString());
+    console.log('Data do agendamento:', dataAgendamento.toISOString());
+
     if (dataAtual.getTime() !== dataAgendamento.getTime()) {
+      console.log('Check-in não permitido: data diferente do agendamento.');
       Alert.alert('Check-in não permitido', 'Você só pode fazer o check-in na data do agendamento.');
       return;
     }
 
+    // 2. Verificar permissões de localização
     setIsLoading(true);
     setGlobalLoading(true);
 
-    // Comentado: Obtenção de coordenadas da clínica e do usuário
-    /*
-    const clinicCoords = await getLatLngFromAddress(enderecoCompleto);
-    if (!clinicCoords) {
+    try {
+      const hasPermission = await checkLocationPermission();
+      if (!hasPermission) {
+        throw new Error('Permissão de localização não concedida.');
+      }
+      console.log('Permissão de localização confirmada.');
+    } catch (error) {
       setIsLoading(false);
       setGlobalLoading(false);
-      Alert.alert('Erro', 'Não foi possível obter as coordenadas da clínica.');
+      Alert.alert(
+        'Permissões necessárias',
+        error.message,
+        [
+          { text: 'Tentar novamente', onPress: handleChecking },
+          { text: 'Abrir Configurações', onPress: () => Linking.openSettings() },
+          { text: 'Cancelar', style: 'cancel' },
+        ]
+      );
       return;
     }
 
+    // 3. Escolher a biblioteca de geolocalização com base na plataforma
+    const Geolocation = Platform.OS === 'ios' ? GeolocationService : GeolocationCommunity;
+
+    // 4. Obter localização do usuário
     Geolocation.getCurrentPosition(
-      async position => {
+      async (position) => {
         const userCoords = position.coords;
-        if (Platform.OS === 'ios' && parseFloat(Platform.Version) >= 14 && userCoords.accuracy > 100) {
+        console.log('Coordenadas do usuário:', userCoords);
+
+        // Verificar precisão da localização no iOS
+        if (Platform.OS === 'ios' && userCoords.accuracy > 100) {
+          console.log('Localização aproximada detectada no iOS.');
           setIsLoading(false);
           setGlobalLoading(false);
-          Alert.alert('Localização aproximada', 'O check-in requer localização precisa. Por favor, ative a localização precisa nas configurações do app.', [
-            {
-              text: 'Abrir Configurações',
-              onPress: async () => {
-                await Linking.openSettings();
-              },
-            },
-            { text: 'Cancelar', style: 'cancel' },
-          ]);
+          Alert.alert(
+            'Localização aproximada',
+            'O check-in requer localização precisa. Por favor, ative a localização precisa nas configurações do dispositivo.',
+            [
+              { text: 'Abrir Configurações', onPress: () => Linking.openSettings() },
+              { text: 'Cancelar', style: 'cancel' },
+            ]
+          );
           return;
         }
 
-        const distance = getDistanceFromLatLonInMeters(userCoords.latitude, userCoords.longitude, clinicCoords.latitude, clinicCoords.longitude);
-        console.log(`Distância do usuário até a clínica: ${distance} metros`);
+        // 5. Comparar com as coordenadas da clínica
+        const clinicLatitude = parseFloat(appointment.latitude);
+        const clinicLongitude = parseFloat(appointment.longitude);
+        console.log('Coordenadas da clínica:', { latitude: clinicLatitude, longitude: clinicLongitude });
 
-        if (distance <= 600) {
-          Alert.alert('Check-in permitido', 'Você está dentro da área permitida.');
-          await validarCodigoAgendamento();
-        } else {
-          Alert.alert('Fora da área', 'Você está longe demais para fazer o check-in.');
+        if (isNaN(clinicLatitude) || isNaN(clinicLongitude)) {
+          console.log('Erro: coordenadas da clínica inválidas.');
+          setIsLoading(false);
+          setGlobalLoading(false);
+          Alert.alert('Erro', 'Coordenadas da clínica inválidas.');
+          return;
         }
 
+        const distance = getDistanceFromLatLonInMeters(userCoords.latitude, userCoords.longitude, clinicLatitude, clinicLongitude);
+        console.log(`Distância até a clínica: ${distance.toFixed(2)} metros`);
+
+        // 6. Verificar se está dentro do raio permitido (600 metros)
+        if (distance <= 600) {
+          console.log('Usuário dentro do raio permitido. Validando código do agendamento...');
+          try {
+            await validarCodigoAgendamento();
+            console.log('Check-in realizado com sucesso.');
+          } catch (error) {
+            console.log('Erro ao validar código de agendamento:', error);
+          }
+        } else {
+          console.log('Usuário fora do raio permitido (600 metros).');
+          Alert.alert('Fora da área', 'Você está fora do raio de 600 metros da clínica para realizar o check-in.');
+        }
         setIsLoading(false);
         setGlobalLoading(false);
       },
-      error => {
-        Alert.alert('Erro', 'Não foi possível obter sua localização. Tente novamente ou desloque-se para o térreo, caso esteja em um local elevado.', [
-          {
-            text: 'Tentar novamente',
-            onPress: () => handleChecking(), // Retry automático
-          },
+      (error) => {
+        console.log('Erro ao obter localização do usuário:', error);
+        setIsLoading(false);
+        setGlobalLoading(false);
+        let errorMessage = 'Não foi possível obter sua localização. Tente novamente ou configure uma localização no emulador.';
+
+        switch (error.code) {
+          case 1:
+            errorMessage = 'Permissão de localização negada. Por favor, verifique as configurações.';
+            break;
+          case 2:
+            errorMessage = 'Serviço de localização indisponível. Verifique se a localização está ativada.';
+            break;
+          case 3:
+            errorMessage = 'Tempo limite excedido ao obter a localização. Tente novamente.';
+            break;
+          default:
+            errorMessage = `Erro ao obter localização: ${error.message}`;
+        }
+
+        Alert.alert('Erro', errorMessage, [
+          { text: 'Tentar novamente', onPress: handleChecking },
+          { text: 'Abrir Configurações', onPress: () => Linking.openSettings() },
           { text: 'Cancelar', style: 'cancel' },
         ]);
-        console.error(error);
-        setIsLoading(false);
-        setGlobalLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
+      {
+        enableHighAccuracy: true, // Exigir alta precisão
+        timeout: 20000, // Tempo limite de 20 segundos
+        maximumAge: Platform.OS === 'ios' ? 1000 : 10000, // Cache de localização mais restrito no iOS
+        distanceFilter: Platform.OS === 'ios' ? 0 : 10, // Ajuste para maior precisão no iOS
+      }
     );
-    */
-
-    // Nova lógica: Chama validarCodigoAgendamento diretamente após verificar a data
-    await validarCodigoAgendamento();
-    setIsLoading(false);
-    setGlobalLoading(false);
   };
 
   return (
-    <Card style={[styles.card, checkinRealizado && styles.checkedInCard]} mode="elevated">
-      {isLoading && <ProgressBar indeterminate color={colors.primary} style={styles.progressBar} />}
+    <View style={{ overflow: 'visible' }}>
+      <Card style={[styles.card, checkinRealizado && styles.checkedInCard]} mode="elevated">
+        {isLoading && <ProgressBar indeterminate color={colors.primary} style={styles.progressBar} />}
+        <TouchableOpacity activeOpacity={0.9} onPress={() => setIsExpanded(!isExpanded)} style={styles.cardTouchable}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.headerContainer}>
+              <View style={styles.avatarContainer}>
+                <Image
+                  source={{ uri: appointment.fachada_profissional || 'https://clinicas.gees.com.br/lsantos/clinicas/img/gees1.png' }}
+                  style={styles.avatar}
+                  resizeMode="cover"
+                />
+                {checkinRealizado && (
+                  <View style={styles.checkinIndicator}>
+                    <IconButton icon="check" size={12} iconColor="#FFF" style={styles.checkIcon} />
+                  </View>
+                )}
+              </View>
 
-      <TouchableOpacity activeOpacity={0.9} onPress={() => setIsExpanded(!isExpanded)} style={styles.cardTouchable}>
-        <Card.Content style={styles.cardContent}>
-          {/* Header com informações principais */}
-          <View style={styles.headerContainer}>
-            <View style={styles.avatarContainer}>
-              <Image source={{ uri: appointment.fachada_profissional || 'https://clinicas.gees.com.br/lsantos/clinicas/img/gees1.png' }} style={styles.avatar} resizeMode="cover" />
-              {checkinRealizado && (
-                <View style={styles.checkinIndicator}>
-                  <IconButton icon="check" size={12} iconColor="#FFF" style={styles.checkIcon} />
-                </View>
-              )}
-            </View>
-
-            <View style={styles.headerTextContainer}>
-              <Text variant="titleMedium" style={[styles.professionalName, { color: colors.onSurface }]}>
-                {appointment.nome_profissional}
-              </Text>
-
-              {/* <View style={styles.clinicInfo}>
-                <IconButton icon="hospital-building" size={14} iconColor={colors.primary} style={styles.smallIcon} />
-                <Text variant="bodySmall" style={[styles.clinicName, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
-                  {appointment.nome_unidade}
+              <View style={styles.headerTextContainer}>
+                <Text variant="titleMedium" style={[styles.professionalName, { color: colors.onSurface }]}>
+                  {appointment.nome_profissional}
                 </Text>
-              </View> */}
-
-              <View style={styles.dateTimeContainer}>
-                <View style={styles.dateTimeItem}>
-                  <IconButton icon="calendar" size={14} iconColor={colors.primary} style={styles.smallIcon} />
-                  <Text variant="bodySmall" style={[styles.dateTimeText, { color: colors.onSurfaceVariant }]}>
-                    {formatDateToDDMMYYYY(appointment.data)}
-                  </Text>
-                </View>
-                <View style={styles.dateTimeItem}>
-                  <IconButton icon="clock-outline" size={14} iconColor={colors.primary} style={styles.smallIcon} />
-                  <Text variant="bodySmall" style={[styles.dateTimeText, { color: colors.onSurfaceVariant }]}>
-                    {String(appointment.inicio).substring(0, 5)}
-                  </Text>
+                <View style={styles.dateTimeContainer}>
+                  <View style={styles.dateTimeItem}>
+                    <IconButton icon="calendar" size={14} iconColor={colors.primary} style={styles.smallIcon} />
+                    <Text variant="bodySmall" style={[styles.dateTimeText, { color: colors.onSurfaceVariant }]}>
+                      {formatDateToDDMMYYYY(appointment.data)}
+                    </Text>
+                  </View>
+                  <View style={styles.dateTimeItem}>
+                    <IconButton icon="clock-outline" size={14} iconColor={colors.primary} style={styles.smallIcon} />
+                    <Text variant="bodySmall" style={[styles.dateTimeText, { color: colors.onSurfaceVariant }]}>
+                      {String(appointment.inicio).substring(0, 5)}
+                    </Text>
+                  </View>
                 </View>
               </View>
+
+              <Animated.View style={{ transform: [{ rotate }] }}>
+                <IconButton icon="chevron-down" size={24} iconColor={colors.onSurfaceVariant} onPress={() => setIsExpanded(!isExpanded)} />
+              </Animated.View>
             </View>
 
-            <Animated.View style={{ transform: [{ rotate }] }}>
-              <IconButton icon="chevron-down" size={24} iconColor={colors.onSurfaceVariant} onPress={() => setIsExpanded(!isExpanded)} />
-            </Animated.View>
-          </View>
-
-          {/* Conteúdo expandido */}
-          {isExpanded && (
-            <Animated.View style={styles.expandedContent}>
-              <View style={styles.divider} />
-
-              {/* Detalhes do procedimento */}
-              <View style={styles.detailSection}>
-                <View style={styles.detailRow}>
-                  <IconButton icon="stethoscope" size={18} iconColor={colors.primary} style={styles.icon} />
-                  <View style={styles.detailTextContainer}>
-                    <Text variant="bodySmall" style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
-                      Procedimento
-                    </Text>
-                    <Text variant="bodyMedium" style={[styles.detailValue, { color: colors.onSurface }]}>
-                      {appointment.nome_procedimento.join(', ')}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <IconButton icon="hospital-building" size={14} iconColor={colors.primary} style={styles.icon} />
-                  <View style={styles.detailTextContainer}>
-                    <Text variant="bodySmall" style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
-                      CLÍNICA/HOSPITAL
-                    </Text>
-                    <Text variant="bodyMedium" style={[styles.detailValue, { color: colors.onSurface }]}>
-                      {appointment.nome_unidade}
-                    </Text>
-                  </View>
-                </View>
-
-                {appointment.contato_paciente && (
+            {isExpanded && (
+              <Animated.View style={styles.expandedContent}>
+                <View style={styles.divider} />
+                <View style={styles.detailSection}>
                   <View style={styles.detailRow}>
-                    <IconButton icon="phone" size={18} iconColor={colors.primary} style={styles.icon} />
+                    <IconButton icon="stethoscope" size={18} iconColor={colors.primary} style={styles.icon} />
                     <View style={styles.detailTextContainer}>
                       <Text variant="bodySmall" style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
-                        Contato
+                        Procedimento
                       </Text>
                       <Text variant="bodyMedium" style={[styles.detailValue, { color: colors.onSurface }]}>
-                        {applyPhoneMask(appointment.contato_paciente)}
+                        {appointment.nome_procedimento.join(', ')}
                       </Text>
                     </View>
                   </View>
-                )}
-              </View>
 
-              {/* Botões de ação */}
-              <View style={styles.actionsContainer}>
-                <TouchableOpacity style={[styles.actionButton, styles.detailsButton, { backgroundColor: colors.surface }]} onPress={() => onPress(index)} activeOpacity={0.7}>
-                  <IconButton icon="information-outline" size={18} iconColor={colors.primary} />
-                  <Text variant="bodyMedium" style={[styles.buttonText, { color: colors.primary }]}>
-                    Detalhes
-                  </Text>
-                </TouchableOpacity>
+                  <View style={styles.detailRow}>
+                    <IconButton icon="hospital-building" size={14} iconColor={colors.primary} style={styles.icon} />
+                    <View style={styles.detailTextContainer}>
+                      <Text variant="bodySmall" style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
+                        CLÍNICA/HOSPITAL
+                      </Text>
+                      <Text variant="bodyMedium" style={[styles.detailValue, { color: colors.onSurface }]}>
+                        {appointment.nome_unidade}
+                      </Text>
+                    </View>
+                  </View>
 
-                {showCheckinButton && (
+                  {appointment.contato_paciente && (
+                    <View style={styles.detailRow}>
+                      <IconButton icon="phone" size={18} iconColor={colors.primary} style={styles.icon} />
+                      <View style={styles.detailTextContainer}>
+                        <Text variant="bodySmall" style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
+                          Contato
+                        </Text>
+                        <Text variant="bodyMedium" style={[styles.detailValue, { color: colors.onSurface }]}>
+                          {applyPhoneMask(appointment.contato_paciente)}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.actionsContainer}>
                   <TouchableOpacity
-                    style={[
-                      styles.actionButton,
-                      checkinRealizado ? styles.checkedInButton : styles.checkinButton,
-                      { backgroundColor: checkinRealizado ? '#E8F5E9' : colors.primary },
-                    ]}
+                    style={[styles.actionButton, styles.detailsButton, { backgroundColor: colors.surface }]}
+                    onPress={() => onPress(index)}
                     activeOpacity={0.7}
-                    onPress={() => {
-                      if (checkinRealizado) {
-                        Alert.alert('Já na Sala de Espera', 'Você já realizou o check-in e está na sala de espera.');
-                      } else {
-                        handleChecking();
-                      }
-                    }}
-                    disabled={isLoading}>
-                    <IconButton icon={checkinRealizado ? 'check-circle' : 'map-marker-check'} size={18} iconColor={checkinRealizado ? '#4CAF50' : '#FFF'} />
-                    <Text variant="bodyMedium" style={[styles.buttonText, { color: checkinRealizado ? '#4CAF50' : '#FFF' }]}>
-                      {checkinRealizado ? 'Na fila' : 'Check-in'}
+                  >
+                    <IconButton icon="information-outline" size={18} iconColor={colors.primary} />
+                    <Text variant="bodyMedium" style={[styles.buttonText, { color: colors.primary }]}>
+                      Detalhes
                     </Text>
                   </TouchableOpacity>
-                )}
-              </View>
-            </Animated.View>
-          )}
-        </Card.Content>
-      </TouchableOpacity>
-    </Card>
+
+                  {showCheckinButton && (
+                    <TouchableOpacity
+                      style={[
+                        styles.actionButton,
+                        checkinRealizado ? styles.checkedInButton : styles.checkinButton,
+                        { backgroundColor: checkinRealizado ? '#E8F5E9' : colors.primary },
+                      ]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        if (checkinRealizado) {
+                          Alert.alert('Já na Sala de Espera', 'Você já realizou o check-in e está na sala de espera.');
+                        } else {
+                          handleChecking();
+                        }
+                      }}
+                      disabled={isLoading}
+                    >
+                      <IconButton
+                        icon={checkinRealizado ? 'check-circle' : 'map-marker-check'}
+                        size={18}
+                        iconColor={checkinRealizado ? '#4CAF50' : '#FFF'}
+                      />
+                      <Text variant="bodyMedium" style={[styles.buttonText, { color: checkinRealizado ? '#4CAF50' : '#FFF' }]}>
+                        {checkinRealizado ? 'Na fila' : 'Check-in'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </Animated.View>
+            )}
+          </Card.Content>
+        </TouchableOpacity>
+      </Card>
+    </View>
   );
 };
 
@@ -431,7 +403,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    overflow: 'hidden',
   },
   cardTouchable: {
     flex: 1,
@@ -492,11 +463,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 4,
   },
-  clinicInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
   dateTimeContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -512,9 +478,6 @@ const styles = StyleSheet.create({
     marginLeft: -8,
     width: 18,
     height: 18,
-  },
-  clinicName: {
-    fontSize: 13,
   },
   dateTimeText: {
     fontSize: 13,

@@ -21,12 +21,13 @@ export default function PaymentCreditCard() {
   const { colors } = useTheme();
   const { dadosUsuarioData, setDadosUsuarioData } = useDadosUsuario();
   const { authData } = useAuth();
-  const { contratoParcela, idFormaPagamento, contratoCreated } = useAccquirePlan();
+  const { contratoParcela, idFormaPagamento, contratoCreated, plano } = useAccquirePlan();
   const [focusedField, setFocusedField] = useState<CreditCardFormField | undefined>('number');
   const [loading, setLoading] = useState<boolean>(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const navigation = useNavigation();
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const {
     control,
@@ -66,7 +67,6 @@ export default function PaymentCreditCard() {
   const handleBackButtonPress = async () => {
     goBack();
     await api.delete(`/contrato/${contratoCreated?.id_contrato_ctt}`, generateRequestHeader(authData.access_token));
-    
   };
 
   async function getSignatureDataAfterPaid() {
@@ -123,10 +123,24 @@ export default function PaymentCreditCard() {
 
   //2 - Realizar o pagamento com o id do cartao cadastrado
   async function makePayment(card: UserCreditCard) {
+    if (!idFormaPagamento || !contratoParcela || !plano) {
+      setErrorMessage(
+        `Dados de pagamento inválidos. Faltando: ${[!idFormaPagamento && 'Forma de Pagamento', !contratoParcela && 'Parcela do Contrato', !plano && 'Plano']
+          .filter(Boolean)
+          .join(', ')}`,
+      );
+      toast.error('Dados de pagamento inválidos.', { position: 'bottom-center' });
+      setLoading(false);
+      return;
+    }
+    const { vlr_adesao_pla = 0 } = plano;
+
     let baseData = {
-      id_origem_pagamento_cpp: 8,
+      id_origem_pagamento_cpp: 7,
       cod_origem_pagamento_cpp: contratoParcela?.id_contrato_parcela_config_cpc,
       num_cod_externo_cpp: 0,
+      vlr_adesao_pla,
+
       id_forma_pagamento_cpp: idFormaPagamento,
       dta_pagamento_cpp: getCurrentDate(),
       id_origem_cpp: 7,
@@ -156,7 +170,7 @@ export default function PaymentCreditCard() {
       }
 
       console.log('deveria passar');
-      
+
       // update
       getSignatureDataAfterPaid();
     } else {

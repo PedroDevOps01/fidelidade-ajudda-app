@@ -124,7 +124,7 @@ useEffect(() => {
             <View style={[styles.colorIndicator, { backgroundColor: colors.primary }]} />
             <Text style={[styles.valueLabel, { color: colors.onSurface }]}>Total Vendido:</Text>
           </View>
-          <Text style={[styles.valueAmount, { color: colors.onSurface }]}>{maskBrazilianCurrency(salesData.reduce((sum, item) => sum + (item.vlr_parcela_ppg ?? 0), 0))}</Text>
+          <Text style={[styles.valueAmount, { color: colors.onSurface }]}>{maskBrazilianCurrency(salesData.reduce((sum, item) => sum + (item.valor_pago ?? 0), 0))}</Text>
         </View>
 
         <View style={styles.valueRow}>

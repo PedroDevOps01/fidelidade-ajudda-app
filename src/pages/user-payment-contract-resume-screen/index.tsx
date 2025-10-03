@@ -16,7 +16,21 @@ export default function UserPaymentContractResumeScreen() {
 
   const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+useEffect(() => {
+  (async () => {
+    setLoading(true);
+    const data = await fetchOptionsAutoFormaPagamentoContract(authData.access_token);
 
+    // Filtra apenas pagamentos que começam com "10" e não seja 10003
+    const newData = data.filter((item: any) => {
+      const id = String(item.id_forma_pagamento_fmp);
+      return id.length === 5 && id.startsWith('10') && id !== '10003';
+    });
+
+    setFormasPagamento(newData);
+    setLoading(false);
+  })();
+}, []);
   useEffect(() => {
     (async () => {
       setLoading(true);

@@ -1039,6 +1039,13 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                                 {selectedParceiro.des_email_responsavel_prc}
                               </Text>
                             </View>
+                              <View style={styles.benefitItem}>
+                              <IconButton icon="phone" size={16} iconColor={colors.primary} style={styles.benefitIcon} />
+                              <Text variant="bodyMedium" style={styles.benefitText}>
+                                {selectedParceiro.num_celular_prc}
+                              </Text>
+                            </View>
+                            
                             <Text variant="titleSmall" style={styles.modalSectionTitle}>
                               Descrição:
                             </Text>
@@ -1096,12 +1103,12 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 200,
-    height:220,
-    marginTop: -30,
+    height: 170,
+    marginTop: Platform.OS === 'ios' ? -20 : 30, // 20 para iOS, 10 para Android
   },
   welcomeContainer: {
     alignItems: 'center',
-    marginTop: -50,
+    marginTop: -40,
   },
   welcomeText: {
     fontSize: 22,
@@ -1116,8 +1123,9 @@ const styles = StyleSheet.create({
   },
   whiteSection: {
     flex: 1,
-    backgroundColor: '#f7f7f7',
-    marginTop: -80,
+    backgroundColor: '#ffffff',
+    marginTop: Platform.OS === 'ios' ? -100 : -95, // 20 para iOS, 10 para Android
+
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },

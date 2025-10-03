@@ -23,6 +23,7 @@ export default function UserMdvSalesDetails() {
   const route = useRoute<RouteProp<UserMdvSalesDetailsRouteParams, 'params'>>();
   const { sales } = route.params;
   const navigation = useNavigation();
+    console.log(sales);
 
   const RenderLine = ({ item }: { item: Sale }) => (
     <Card
@@ -46,7 +47,7 @@ export default function UserMdvSalesDetails() {
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: colors.onSurface }]}>Valor:</Text>
          <Text style={[styles.value, { color: colors.primary }]}>
-  {maskBrazilianCurrency(item.vlr_parcela_ppg ?? 0)}
+  {maskBrazilianCurrency(item.valor_pago ?? 0)}
 </Text>
 
 

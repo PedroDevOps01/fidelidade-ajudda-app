@@ -49,6 +49,8 @@ export default function UserContractsPaymentMethod() {
         return 'qrcode';
       case '10002': // Cartão de crédito
         return 'credit-card';
+      case '10003': // Boleto
+        return 'barcode'; // Ícone apropriado para boleto
       default:
         return 'cash';
     }
@@ -60,6 +62,8 @@ export default function UserContractsPaymentMethod() {
         return '#32BCAD';
       case '10002': // Cartão de crédito
         return '#5B6ABF';
+      case '10003': // Boleto
+        return '#FF9800'; // Cor diferenciada para boleto
       default:
         return colors.primary;
     }
@@ -67,8 +71,6 @@ export default function UserContractsPaymentMethod() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.fundo }]}>
-      
-
       <Text variant="bodyMedium" style={[styles.headerSubtitle, { color: colors.onSurfaceVariant }]}>
         Selecione como deseja efetuar o pagamento
       </Text>
@@ -105,6 +107,7 @@ export default function UserContractsPaymentMethod() {
                         Pagamento instantâneo • Sem taxas
                       </Text>
                     )}
+                   
                   </View>
                   <MaterialCommunityIcons
                     name="chevron-right"

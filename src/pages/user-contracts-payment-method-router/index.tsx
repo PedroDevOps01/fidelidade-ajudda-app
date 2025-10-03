@@ -8,15 +8,15 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { useDadosUsuario } from '../../context/pessoa-dados-context';
 import LoadingFull from '../../components/loading-full';
 import PaymentPix from './payment-pix';
-import { reset } from '../../router/navigationRef';
 import PaymentCreditCard from './payment-credit-card';
+import PaymentBoleto from './payment-boleto';
+import { reset } from '../../router/navigationRef';
 
 export default function UserContractsPaymentMethodRouter() {
   const { colors } = useTheme();
   const { authData } = useAuth();
   const { dadosUsuarioData } = useDadosUsuario();
-  const { idFormaPagamento } = useAccquirePlan();
-  const { plano, setContratoCreated, setContratoParcela } = useAccquirePlan();
+  const { idFormaPagamento, plano, setContratoCreated, setContratoParcela } = useAccquirePlan();
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMessage, setLoadingMessage] = useState<string>();
   const [alertErrorMessage, setAlertErrorMessage] = useState<string>();
@@ -24,119 +24,168 @@ export default function UserContractsPaymentMethodRouter() {
 
   const hasFetched = useRef(false);
 
-
   useEffect(() => {
     if (alertErrorMessage) {
       setAlertErrorMessageVisible(true);
     }
   }, [alertErrorMessage]);
-  console.log('plano detalhado', plano);
-  // 1 - Obter os dados do plano OK
+
   async function getPlanoPagamentoData() {
-  try {
-    const response = await api.get(
-      `/plano-pagamento?id_forma_pagamento_ppg=${idFormaPagamento}&is_ativo_ppg=1`,
-      generateRequestHeader(authData.access_token)
-    );
+    try {
+      const response = await api.get(
+        `/plano-pagamento?id_forma_pagamento_ppg=${idFormaPagamento}&is_ativo_ppg=1`,
+        generateRequestHeader(authData.access_token)
+      );
 
-    const { data } = response;
-    console.log('1 - getPlanoPagamentoData', data.response.data);
-if (!plano) {
-  setAlertErrorMessage('Nenhum plano selecionado!');
-  setLoading(false);
-  return;
-}
+      const { data } = response;
+      log('getPlanoPagamentoData response', data);
 
-    if (data.response.data.length > 0) {
-      // Filtra pelo id do plano correto
-const planoCorreto = data.response.data.find(
-  (p: any) => plano && p.id_plano_ppg === plano.id_plano_pla
-);
+      if (!plano) {
+        setAlertErrorMessage('Nenhum plano selecionado!');
+        setLoading(false);
+        return;
+      }
+
+      if (!data?.response?.data?.length) {
+        setAlertErrorMessage('Nenhum plano de pagamento encontrado para a forma de pagamento selecionada!');
+        setLoading(false);
+        return;
+      }
+
+      const planoCorreto = data.response.data.find(
+        (p: any) => plano && p.id_plano_ppg === plano.id_plano_pla
+      );
 
       if (!planoCorreto) {
         setAlertErrorMessage('Plano de pagamento não encontrado para este plano!');
         console.log('Plano de pagamento não encontrado para este plano!');
+        setLoading(false);
         return;
       }
 
       createContrato(planoCorreto);
       setLoadingMessage('Obtendo informações');
+    } catch (err: any) {
+      console.log('getPlanoPagamentoData error', err.response?.data || err);
+      setAlertErrorMessage('Erro ao carregar dados do plano de pagamento. Tente novamente mais tarde.');
+      setLoading(false);
     }
-  } catch (err) {
-    console.log('1 - err', err);
-    Alert.alert('Erro', 'Erro ao carregar dados. Tente novamente mais tarde');
-    setAlertErrorMessage('erro 1');
   }
-}
 
-
-  // 2 - Criar o contrato
-  async function createContrato(planoPagamento: PlanoPagamento) {
+  async function createContrato(planoPagamento: any) {
     console.log('2 - createContrato');
-
     try {
       let dataToSent = {
         id_pessoa_ctt: dadosUsuarioData.pessoaDados?.id_pessoa_pes,
-        vlr_inicial_ctt: planoPagamento?.vlr_parcela_ppg,
+        vlr_inicial_ctt: plano?.vlr_adesao_pla,
         vlr_adesao_ctt: plano?.vlr_adesao_pla,
         id_plano_pagamento_ctt: planoPagamento?.id_plano_pagamento_ppg,
         id_situacao_ctt: 15,
         id_origem_ctt: 12,
         dta_dia_cpc: Number(getCurrentDate().split('-')[2]),
         vlr_parcela_cpc: planoPagamento?.vlr_parcela_ppg,
-        is_mobile: true
+        is_mobile: true,
       };
 
       const response = await api.post(`/contrato`, dataToSent, generateRequestHeader(authData.access_token));
-
       const { data } = response;
 
-      log('ciar contrato', data);
+      log('criar contrato', data);
 
       if (data.data) {
         setLoadingMessage('Criando seu contrato');
         setContratoCreated(data.data);
-        getContratoPacela(data.data);
-      }
-    } catch (err: any) {
-      console.log('2 - err', err.response.data);
-
-      setAlertErrorMessage(`${err.response.data.message}`);
-
-      return;
-    }
-  }
-
-  // 3 - Pegar a primeira parcela
-  async function getContratoPacela(contratoCreated: PessoaContratoNew) {
-    console.log('3 - getContratoPacela');
-    if (contratoCreated) {
-      try {
-        const response = await api.get(`/parcela/${contratoCreated?.id_contrato_ctt}`, generateRequestHeader(authData.access_token));
-
-        const { data } = response;
-        if (data.data.data.length > 0) {
-          setContratoParcela(data.data.data[0]);
-          setLoadingMessage('Obtendo parcela');
-        }
-      } catch (err) {
-        console.log('3 - err', err);
-        Alert.alert('Erro', 'Erro ao carregar dados. Tente novamente mais tarde');
-        setAlertErrorMessage('Erro ao realizar pagamento! código -  3');
-      } finally {
+        getContratoParcela(data.data);
+      } else {
+        setAlertErrorMessage('Falha ao criar contrato. Dados inválidos retornados.');
         setLoading(false);
       }
+    } catch (err: any) {
+      console.log('createContrato error', err.response?.data || err);
+      setAlertErrorMessage(err.response?.data?.message || 'Erro ao criar contrato. Tente novamente mais tarde.');
+      setLoading(false);
     }
   }
 
-  useEffect(() => {
-    if (!hasFetched.current) {
-      hasFetched.current = true;
-      (async () => {
-        await getPlanoPagamentoData();
-      })();
+  async function getContratoParcela(contratoCreated: any) {
+    console.log('3 - getContratoParcela');
+    if (!contratoCreated?.id_contrato_ctt) {
+      setAlertErrorMessage('ID do contrato inválido.');
+      setLoading(false);
+      return;
     }
-  }, []);
+
+    const maxRetries = 3;
+    let retries = 0;
+    while (retries < maxRetries) {
+      try {
+        const response = await api.get(`/parcela/${contratoCreated.id_contrato_ctt}`, generateRequestHeader(authData.access_token));
+        const { data } = response;
+        log('getContratoParcela response', JSON.stringify(data, null, 2));
+
+        if (response.status === 200 && data?.data?.data?.length > 0) {
+          setContratoParcela(data.data.data[0]);
+          setLoadingMessage('Obtendo parcela');
+          setLoading(false);
+          return;
+        } else {
+          console.log(`getContratoParcela: No parcels found, retry ${retries + 1}/${maxRetries}`);
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retrying
+          }
+        }
+      } catch (err: any) {
+        console.log('getContratoParcela error', err.response?.data || err);
+        retries++;
+        if (retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    }
+
+    setAlertErrorMessage('Nenhuma parcela encontrada para o contrato após várias tentativas. Tente novamente mais tarde.');
+    setLoading(false);
+  }
+
+ useEffect(() => {
+  if (!hasFetched.current) {
+    hasFetched.current = true;
+
+    (async () => {
+      if (idFormaPagamento === 10003) {
+        // Alerta de confirmação para boleto
+        Alert.alert(
+          'Confirmação de Pagamento',
+          'O pagamento via boleto pode levar até 1 a 3 dias úteis até a compensação. Deseja continuar?',
+          [
+            {
+              text: 'Cancelar',
+              style: 'cancel',
+              onPress: () => {
+                // Volta para a tela anterior (seleção de forma de pagamento)
+                reset([{ name: 'user-contracts-payment-method' }], 0);
+              },
+            },
+            {
+              text: 'Continuar',
+              onPress: async () => {
+                setLoading(true);
+                await getPlanoPagamentoData();
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      } else {
+        setLoading(true);
+        await getPlanoPagamentoData();
+      }
+    })();
+  }
+}, []);
+
+
 
   return (
     <>
@@ -145,14 +194,14 @@ const planoCorreto = data.response.data.find(
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Atenção</Text>
             <Text style={styles.modalMessage}>{alertErrorMessage}</Text>
-
             <Button
               mode="contained"
               onPress={() => {
                 setAlertErrorMessageVisible(false);
                 reset([{ name: 'logged-home-screen' }], 0);
               }}
-              style={styles.closeButton}>
+              style={styles.closeButton}
+            >
               Fechar
             </Button>
           </View>
@@ -163,12 +212,16 @@ const planoCorreto = data.response.data.find(
         <LoadingFull title={loadingMessage} />
       ) : (
         <>
-          {idFormaPagamento == 10001 ? (
+          {idFormaPagamento === 10001 ? (
             <PaymentPix />
+          ) : idFormaPagamento === 10002 ? (
+            <PaymentCreditCard />
+          ) : idFormaPagamento === 10003 ? (
+            <PaymentBoleto />
           ) : (
-            <>
-              <PaymentCreditCard />
-            </>
+            <View style={styles.errorContainer}>
+              <Text style={[styles.errorText, { color: colors.error }]}>Forma de pagamento inválida</Text>
+            </View>
           )}
         </>
       )}
@@ -187,7 +240,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
-    elevation: 5, // Sombra para destacar
+    elevation: 5,
   },
   modalTitle: {
     fontSize: 18,
@@ -204,5 +257,14 @@ const styles = StyleSheet.create({
   closeButton: {
     width: '100%',
     borderRadius: 8,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

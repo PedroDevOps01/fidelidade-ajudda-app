@@ -16,7 +16,7 @@ const SalesChart = ({ salesData, loading }: { salesData: Sale[]; loading: boolea
 
   // Agrupar vendas por data
   const dateMap: Record<string, number> = salesData.reduce((acc, item) => {
-    acc[item.dta_pagamento_cpp] = (acc[item.dta_pagamento_cpp] || 0) + item.vlr_parcela_ppg;
+    acc[item.dta_pagamento_cpp] = (acc[item.dta_pagamento_cpp] || 0) + item.valor_pago;
     return acc;
   }, {} as Record<string, number>);
 

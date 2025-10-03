@@ -25,8 +25,9 @@ export default function PaymentPix() {
   const { colors } = useTheme();
   const { dadosUsuarioData, setDadosUsuarioData } = useDadosUsuario();
   const [pixResponse, setPixResponse] = useState<PixResponse>();
+  
   const [loading, setLoading] = useState(true);
-  const { idFormaPagamento, contratoParcela, contratoCreated } = useAccquirePlan();
+  const { idFormaPagamento, contratoParcela, contratoCreated, plano } = useAccquirePlan();
   const [errorMessage, setErrorMessage] = useState<string>('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -73,15 +74,34 @@ console.log(response);
   }
 
   async function requestPayment() {
+
+    if (!idFormaPagamento || !contratoParcela || !plano) {
+      setErrorMessage(
+        `Dados de pagamento inválidos. Faltando: ${[
+          !idFormaPagamento && 'Forma de Pagamento',
+          !contratoParcela && 'Parcela do Contrato',
+          !plano && 'Plano',
+        ]
+          .filter(Boolean)
+          .join(', ')}`
+      );
+      toast.error('Dados de pagamento inválidos.', { position: 'bottom-center' });
+      setLoading(false);
+      return;
+    }
     setErrorMessage('');
     if (!idFormaPagamento) return;
     setLoading(true);
     console.log('Solicitando pagamento...');
     try {
+          const { vlr_adesao_pla = 0 } = plano;
+
       const baseData = {
-        id_origem_pagamento_cpp: 8,
+        id_origem_pagamento_cpp: 7,
         cod_origem_pagamento_cpp: contratoParcela?.id_contrato_parcela_config_cpc,
         num_cod_externo_cpp: 0,
+              vlr_adesao_pla,
+
         dta_pagamento_cpp: dayjs().format('YYYY-MM-DD'),
         id_origem_cpp: 7,
         id_forma_pagamento_cpp: idFormaPagamento,
