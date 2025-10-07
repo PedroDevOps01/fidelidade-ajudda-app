@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Image, Clipboard, ScrollView } from 'react-native';
-import { Text, Card, Button, useTheme, ActivityIndicator } from 'react-native-paper';
-import { useFocusEffect, useRoute } from '@react-navigation/native';
-import { generateRequestHeader, getCurrentDate, maskBrazilianCurrency } from '../../utils/app-utils';
-import { api } from '../../network/api';
-import { useAuth } from '../../context/AuthContext';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {StyleSheet, View, Image, Clipboard, ScrollView} from 'react-native';
+import {Text, Card, Button, useTheme, ActivityIndicator} from 'react-native-paper';
+import {useFocusEffect, useRoute} from '@react-navigation/native';
+import {generateRequestHeader, getCurrentDate, maskBrazilianCurrency} from '../../utils/app-utils';
+import {api} from '../../network/api';
+import {useAuth} from '../../context/AuthContext';
 import LoadingFull from '../../components/loading-full';
-import { navigate } from '../../router/navigationRef';
+import {navigate} from '../../router/navigationRef';
 import { toast } from 'sonner-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -19,8 +19,8 @@ interface PixResponse {
 
 export default function UserPaymentScreen() {
   const route = useRoute();
-  const { colors } = useTheme();
-  const { authData } = useAuth();
+  const {colors} = useTheme();
+  const {authData} = useAuth();
 
   const [loading, setLoading] = useState<boolean>(true);
   const [pixResponse, setPixResponse] = useState<PixResponse>();
@@ -44,7 +44,7 @@ export default function UserPaymentScreen() {
           dta_pagamento_cpp: getCurrentDate(),
           id_origem_cpp: 8,
         },
-        generateRequestHeader(authData.access_token),
+        generateRequestHeader(authData.access_token)
       );
       setPixResponse(response.data.response);
     } catch (err: any) {
@@ -55,8 +55,11 @@ export default function UserPaymentScreen() {
   }
 
   async function checkPaid(cod_pagamento: string) {
-    const response = await api.get(`/integracaoPagarMe/verificarPagamento?cod_pedido_pgm=${cod_pagamento}`, generateRequestHeader(authData.access_token));
-
+    const response = await api.get(
+      `/integracaoPagarMe/verificarPagamento?cod_pedido_pgm=${cod_pagamento}`,
+      generateRequestHeader(authData.access_token)
+    );
+    
     if (response.status === 200) {
       const status = response.data.response[0]?.des_status_pgm;
       if (status === 'paid') navigate('user-payment-successfull-screen');
@@ -70,7 +73,7 @@ export default function UserPaymentScreen() {
         checkPaid(pixResponse?.codigoPagamento!);
       }, 20000);
       return () => clearInterval(interval);
-    }, [pixResponse?.codigoPagamento]),
+    }, [pixResponse?.codigoPagamento])
   );
 
   useEffect(() => {
@@ -80,45 +83,44 @@ export default function UserPaymentScreen() {
   }, [route]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, {backgroundColor: colors.background}]}>
       {loading ? (
         <LoadingFull />
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Card mode="elevated" style={[styles.card, { backgroundColor: colors.surface }]}>
             <Card.Title
-              title="Pagamento via Pix"
-              subtitle="Escaneie o QR Code ou copie o código abaixo para pagar."
-              titleStyle={[styles.title, { color: colors.primary }]}
-              subtitleStyle={[styles.subtitle, { color: colors.onSurfaceVariant }]}
-              left={props => <MaterialCommunityIcons {...props} name="qrcode-scan" size={28} color={colors.primary} />}
-              titleContainerStyle={styles.titleContainer} // Add custom container style
-            />
+  title="Pagamento via Pix"
+  subtitle="Escaneie o QR Code ou copie o código abaixo para pagar."
+  titleStyle={[styles.title, { color: colors.primary }]}
+  subtitleStyle={[styles.subtitle, { color: colors.onSurfaceVariant }]}
+  left={props => <MaterialCommunityIcons {...props} name="qrcode-scan" size={28} color={colors.primary} />}
+  titleContainerStyle={styles.titleContainer} // Add custom container style
+/>
             <Card.Content style={styles.content}>
-              {pixResponse && (
-  <View style={styles.valueContainer}>
-    <Text variant="bodyMedium" style={[styles.label, { color: colors.onSurface }]}>
-      Valor da Parcela:
-    </Text>
-    <Text variant="headlineMedium" style={[styles.value, { color: colors.primary }]}>
-      {maskBrazilianCurrency(pixResponse.vlr_parcela_cpp)}
-    </Text>
-  </View>
-)}
+              <View style={styles.valueContainer}>
+                <Text variant="bodyMedium" style={[styles.label, { color: colors.onSurface }]}>
+                  Valor da Parcela:
+                </Text>
+                <Text variant="headlineMedium" style={[styles.value, { color: colors.primary }]}>
+                  {maskBrazilianCurrency(pixResponse!.vlr_parcela_cpp ?? 0)}
+                </Text>
+              </View>
 
               <View style={styles.qrContainer}>
                 <Text variant="bodyMedium" style={[styles.label, { color: colors.onSurface }]}>
                   Escaneie o QR Code:
                 </Text>
                 <View style={[styles.qrBorder, { borderColor: colors.primaryContainer }]}>
-                  <Image source={{ uri: pixResponse!.qrcode_url }} style={styles.qrCode} resizeMode="contain" />
+                  <Image source={{uri: pixResponse!.qrcode_url}} style={styles.qrCode} resizeMode="contain" />
                 </View>
                 <Button
                   mode="contained-tonal"
                   icon="content-copy"
                   onPress={copyToClipboard}
                   style={[styles.copyButton, { backgroundColor: colors.primaryContainer }]}
-                  labelStyle={{ color: colors.onPrimaryContainer }}>
+                  labelStyle={{ color: colors.onPrimaryContainer }}
+                >
                   Copiar código Pix
                 </Button>
               </View>
@@ -173,7 +175,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   title: { fontWeight: '800', fontSize: 22, textAlign: 'center' }, // Removed marginLeft: -8
-  subtitle: { textAlign: 'center', fontSize: 16 }, // Adjust fontSize as needed
+  subtitle: { textAlign: 'center', fontSize: 16 }, // Adjust fontSize as needed  
   content: { paddingVertical: 16 },
   valueContainer: { alignItems: 'center', marginBottom: 24 },
   label: { fontWeight: '500', marginBottom: 4 },
@@ -194,10 +196,10 @@ const styles = StyleSheet.create({
   qrCode: { width: 220, height: 220 },
   copyButton: { borderRadius: 12, marginTop: 8 },
   titleContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row', // Ensure icon and text are aligned properly
-  },
+  justifyContent: 'center',
+  alignItems: 'center',
+  flexDirection: 'row', // Ensure icon and text are aligned properly
+},
   infoCard: {
     borderRadius: 16,
     marginBottom: 24,

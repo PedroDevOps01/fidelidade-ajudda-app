@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   icon: { marginBottom: 16 },
   text: { textAlign: 'center', paddingHorizontal: 16, marginBottom: 16 },
   filterModal: { margin: 20, borderRadius: 16, padding: 0, overflow: 'hidden' },
-  filterModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, backgroundColor: '#AF91F9', borderBottomColor: '#f0f0f0' },
+  filterModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, backgroundColor: '#A497FB', borderBottomColor: '#f0f0f0' },
   filterModalTitle: { fontWeight: '600', color: 'white' },
   dateInputsContainer: { padding: 16 },
   dateInput: { marginBottom: 16 },

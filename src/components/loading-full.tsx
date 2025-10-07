@@ -79,7 +79,7 @@ const LoadingFull = () => {
   transform: [{ translateY }],
 }]}>
     <LinearGradient
-      colors={['#AF91F9', '#ED9C83']} // aqui você define as cores do gradient
+      colors={['#A497FB', '#ED9C83']} // aqui você define as cores do gradient
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={{ flex: 1 }}

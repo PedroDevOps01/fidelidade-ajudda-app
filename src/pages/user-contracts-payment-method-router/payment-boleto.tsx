@@ -439,7 +439,7 @@ export default function PaymentBoleto() {
                 mode="contained"
                 icon="file-pdf-box"
                 onPress={() => boletoResponse?.boleto_pdf && Linking.openURL(boletoResponse.boleto_pdf)}
-                style={[styles.actionButton, { backgroundColor: '#ea7c5bc2' }]}
+                style={[styles.actionButton, { backgroundColor: '#F1591E' }]}
                 labelStyle={styles.buttonLabel}
               >
                 Baixar PDF

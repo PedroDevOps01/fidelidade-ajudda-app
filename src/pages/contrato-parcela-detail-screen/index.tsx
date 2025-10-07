@@ -49,7 +49,7 @@ const ContratoParcelaDetailScren = () => {
       {loading ? (
         <LoadingFull 
           size={300} 
-          colors={['#AF91F9', '#EE70E8']} // 🔹 usa as duas cores aqui
+          colors={['#A497FB', '#EE70E8']} // 🔹 usa as duas cores aqui
         />
       ) : (
         <FlatList

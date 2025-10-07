@@ -7,6 +7,7 @@ import { StyleSheet } from 'react-native';
 import { maskBrazilianCurrency } from '../../../utils/app-utils';
 
 const SalesChart = ({ salesData, loading }: { salesData: Sale[]; loading: boolean }) => {
+  console.log(salesData);
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const [menuVisible, setMenuVisible] = useState(false);

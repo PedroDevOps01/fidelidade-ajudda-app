@@ -27,14 +27,7 @@
                                 <rect key="frame" x="87.5" y="278" width="200" height="200"/>
                                 <subviews>
                                     <!-- Background Circle -->
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cIr-5t-MnB">
-                                        <rect key="frame" x="50" y="50" width="100" height="100"/>
-                                        <color key="backgroundColor" white="1" alpha="0.2" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="100" id="5tR-vb-HfS"/>
-                                            <constraint firstAttribute="height" constant="100" id="fB8-6k-5aH"/>
-                                        </constraints>
-                                    </view>
+                                    
                                     
                                     <!-- App Name -->
                                     <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="App Fidelidade" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GJd-Yh-RWb">
@@ -44,13 +37,7 @@
                                         <nil key="highlightedColor"/>
                                     </label>
                                     
-                                    <!-- Icon/Symbol -->
-                                    <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="⭐" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="icn-7h-8pL">
-                                        <rect key="frame" x="75" y="65" width="50" height="50"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="40"/>
-                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
+                                   
                                 </subviews>
                                 <color key="backgroundColor" white="0" alpha="0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
