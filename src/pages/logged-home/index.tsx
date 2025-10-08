@@ -24,9 +24,10 @@ import { WebView } from 'react-native-webview';
 import CustomToast from '../../components/custom-toast';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { ImageBackground } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-
+import { Linking } from 'react-native';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { Alert } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 
 interface UserSchedule {
   agenda_exames_id: string;
@@ -124,7 +125,7 @@ const TelemedicineCard: React.FC<{ onPress: () => void }> = ({ onPress }) => {
 const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
   const { colors } = useTheme();
   const { dadosUsuarioData, userCreditCards, setCreditCards, userContracts, setContracts, setDadosUsuarioData } = useDadosUsuario();
-// console.log(JSON.stringify(dadosUsuarioData, null, 2));
+  // console.log(JSON.stringify(dadosUsuarioData, null, 2));
   const { authData } = useAuth();
   const { setUserSchedulesData, userSchedules } = useConsultas();
   const [lastHistoricSchedule, setLastHistoricSchedule] = useState<UserSchedule | null>(null);
@@ -135,6 +136,11 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
   const [inadimplenciasDialogVisible, setInadimplenciasDialogVisible] = useState<boolean>(false);
   const [agendamentosDialogVisible, setAgendamentosDialogVisible] = useState<boolean>(false);
   const [schedulesLoading, setSchedulesLoading] = useState<boolean>(false);
+  const [parceirosCredenciados, setParceirosCredenciados] = useState<Parceiro[]>([]);
+
+  const scrollXCredenciados = useRef(new Animated.Value(0)).current;
+  const [modalCredenciadosVisible, setModalCredenciadosVisible] = useState(false);
+  const [selectedParceiroCredenciadoId, setSelectedParceiroCredenciadoId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [partnersLoading, setPartnersLoading] = useState<boolean>(true);
   const [hasTelemedicine, setHasTelemedicine] = useState<boolean>(false); // New state for telemedicine
@@ -158,7 +164,6 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
   }));
 
   useEffect(() => {
-    console.log('Dados do usuário atualizados:', JSON.stringify(dadosUsuarioData, null, 2));
     const isSigned = dadosUsuarioData.pessoa?.is_assinado_pes === 1 || dadosUsuarioData.pessoaDados?.is_assinado_pes === 1;
     const isLogged = !!dadosUsuarioData.user?.id_usuario_usr && !!authData.access_token;
 
@@ -232,144 +237,144 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
     };
 
     return (
-    <Animated.View style={{ transform: [{ scale: scaleValue }], marginVertical: 8 }}>
-      <TouchableOpacity onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} activeOpacity={0.9}>
-        <Card style={[styles.card, type === 'next' ? styles.nextAppointmentCard : styles.historyCard]}>
-      <View style={{ overflow: 'hidden', borderRadius: 16 }}>
-            <Card.Content style={styles.cardContent}>
-              {/* Header */}
-              <View style={styles.cardHeader}>
-                <View style={styles.statusContainer}>
-                  <Icon name={status.icon} size={16} color={status.color} />
-                  <Text variant={type === 'next' ? 'labelSmall' : 'bodyMedium'} style={[styles.statusText, { color: status.color }]}>
-                    {status.text}
-                  </Text>
-                </View>
-                {type === 'next' ? (
-                  <IconButton icon="chevron-right" size={20} iconColor={colors.onSurfaceVariant} style={styles.chevron} />
-                ) : (
-                  status.isRecent && <Badge style={[styles.recentBadge, { backgroundColor: colors.primary }]}>Recente</Badge>
-                )}
-              </View>
-
-              {/* Main Content */}
-              <View style={styles.mainContent}>
-                <Image
-                  source={appointment.fachada_profissional ? { uri: appointment.fachada_profissional } : require('../../assets/images/fallback_image.png')}
-                  style={styles.professionalImage}
-                  resizeMode="cover"
-                  onError={() => console.log('Image load error')}
-                />
-                <View style={styles.infoContainer}>
-                  <Text variant="titleMedium" style={[styles.procedureName, { color: colors.onSurface }]} numberOfLines={2}>
-                    {Array.isArray(appointment.nome_procedimento) ? appointment.nome_procedimento.join(', ') : appointment.nome_procedimento}
-                  </Text>
-                  <View style={styles.professionalInfo}>
-                    <Icon name="person" size={14} color={colors.primary} />
-                    <Text variant="bodyMedium" style={[styles.professionalName, { color: colors.primary }]} numberOfLines={1}>
-                      {appointment.nome_profissional || 'Profissional não especificado'}
+      <Animated.View style={{ transform: [{ scale: scaleValue }], marginVertical: 8 }}>
+        <TouchableOpacity onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} activeOpacity={0.9}>
+          <Card style={[styles.card, type === 'next' ? styles.nextAppointmentCard : styles.historyCard]}>
+            <View style={{ overflow: 'hidden', borderRadius: 16 }}>
+              <Card.Content style={styles.cardContent}>
+                {/* Header */}
+                <View style={styles.cardHeader}>
+                  <View style={styles.statusContainer}>
+                    <Icon name={status.icon} size={16} color={status.color} />
+                    <Text variant={type === 'next' ? 'labelSmall' : 'bodyMedium'} style={[styles.statusText, { color: status.color }]}>
+                      {status.text}
                     </Text>
                   </View>
-                  <View style={styles.detailsRow}>
-                    <View style={styles.detailItem}>
-                      <Icon name="access-time" size={14} color={colors.onSurfaceVariant} />
-                      <Text variant="bodySmall" style={[styles.detailText, { color: colors.onSurfaceVariant }]}>
-                        {String(appointment.inicio).substring(0, 5)}
+                  {type === 'next' ? (
+                    <IconButton icon="chevron-right" size={20} iconColor={colors.onSurfaceVariant} style={styles.chevron} />
+                  ) : (
+                    status.isRecent && <Badge style={[styles.recentBadge, { backgroundColor: colors.primary }]}>Recente</Badge>
+                  )}
+                </View>
+
+                {/* Main Content */}
+                <View style={styles.mainContent}>
+                  <Image
+                    source={appointment.fachada_profissional ? { uri: appointment.fachada_profissional } : require('../../assets/images/fallback_image.png')}
+                    style={styles.professionalImage}
+                    resizeMode="cover"
+                    onError={() => console.log('Image load error')}
+                  />
+                  <View style={styles.infoContainer}>
+                    <Text variant="titleMedium" style={[styles.procedureName, { color: colors.onSurface }]} numberOfLines={2}>
+                      {Array.isArray(appointment.nome_procedimento) ? appointment.nome_procedimento.join(', ') : appointment.nome_procedimento}
+                    </Text>
+                    <View style={styles.professionalInfo}>
+                      <Icon name="person" size={14} color={colors.primary} />
+                      <Text variant="bodyMedium" style={[styles.professionalName, { color: colors.primary }]} numberOfLines={1}>
+                        {appointment.nome_profissional || 'Profissional não especificado'}
                       </Text>
                     </View>
-                    <View style={styles.detailItem}>
-                      <Icon name={type === 'next' ? 'location-on' : 'location-on'} size={14} color={colors.onSurfaceVariant} />
-                      <Text variant="bodySmall" style={[styles.detailText, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
-                        {appointment.nome_unidade}
-                      </Text>
+                    <View style={styles.detailsRow}>
+                      <View style={styles.detailItem}>
+                        <Icon name="access-time" size={14} color={colors.onSurfaceVariant} />
+                        <Text variant="bodySmall" style={[styles.detailText, { color: colors.onSurfaceVariant }]}>
+                          {String(appointment.inicio).substring(0, 5)}
+                        </Text>
+                      </View>
+                      <View style={styles.detailItem}>
+                        <Icon name={type === 'next' ? 'location-on' : 'location-on'} size={14} color={colors.onSurfaceVariant} />
+                        <Text variant="bodySmall" style={[styles.detailText, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
+                          {appointment.nome_unidade}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
 
-              {/* Footer */}
-              <View style={[styles.cardFooter, { backgroundColor: `${colors.onSecondary}15`, borderTopWidth: 0 }]}>
-                {type === 'next' ? (
-                  <>
-                    <View style={[styles.priorityIndicator, { backgroundColor: status.color }]} />
-                    <Text variant="bodySmall" style={[styles.footerText, { color: colors.onSurfaceVariant }]}>
-                      Confirme sua presença com antecedência
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="check-circle" size={16} color={colors.primary} />
-                    <Text variant="bodySmall" style={[styles.footerText, { color: colors.onSurfaceVariant }]}>
-                      Consulta realizada
-                    </Text>
-                  </>
-                )}
-              </View>
-            </Card.Content>
-          </View>
-        </Card>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
-
- const EmptyAppointmentCard = ({ type = 'next', onPress }: { type?: 'next' | 'history'; onPress: () => void }) => {
-  const { colors } = useTheme();
-  const scaleValue = useRef(new Animated.Value(1)).current;
-
-  const config = {
-    next: {
-      title: 'Nenhum agendamento',
-      subtitle: 'Toque para agendar uma nova consulta',
-      icon: 'event-available',
-      color: colors.textcolor,
-    },
-    history: {
-      title: 'Nenhum histórico',
-      subtitle: 'Seus agendamentos aparecerão aqui',
-      icon: 'history',
-      color: colors.textcolor,
-    },
+                {/* Footer */}
+                <View style={[styles.cardFooter, { backgroundColor: `${colors.onSecondary}15`, borderTopWidth: 0 }]}>
+                  {type === 'next' ? (
+                    <>
+                      <View style={[styles.priorityIndicator, { backgroundColor: status.color }]} />
+                      <Text variant="bodySmall" style={[styles.footerText, { color: colors.onSurfaceVariant }]}>
+                        Confirme sua presença com antecedência
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="check-circle" size={16} color={colors.primary} />
+                      <Text variant="bodySmall" style={[styles.footerText, { color: colors.onSurfaceVariant }]}>
+                        Consulta realizada
+                      </Text>
+                    </>
+                  )}
+                </View>
+              </Card.Content>
+            </View>
+          </Card>
+        </TouchableOpacity>
+      </Animated.View>
+    );
   };
 
-  const { title, subtitle, icon, color } = config[type];
+  const EmptyAppointmentCard = ({ type = 'next', onPress }: { type?: 'next' | 'history'; onPress: () => void }) => {
+    const { colors } = useTheme();
+    const scaleValue = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.spring(scaleValue, {
-      toValue: 0.98,
-      useNativeDriver: true,
-    }).start();
+    const config = {
+      next: {
+        title: 'Nenhum agendamento',
+        subtitle: 'Toque para agendar uma nova consulta',
+        icon: 'event-available',
+        color: colors.primary,
+      },
+      history: {
+        title: 'Nenhum histórico',
+        subtitle: 'Seus agendamentos aparecerão aqui',
+        icon: 'history',
+        color: colors.primary,
+      },
+    };
+
+    const { title, subtitle, icon, color } = config[type];
+
+    const handlePressIn = () => {
+      Animated.spring(scaleValue, {
+        toValue: 0.98,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const handlePressOut = () => {
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    return (
+      <Animated.View style={{ transform: [{ scale: scaleValue }], marginVertical: 8 }}>
+        <TouchableOpacity onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} activeOpacity={0.8}>
+          <Card style={[styles.card, styles.emptyCard]}>
+            <View style={{ overflow: 'hidden', borderRadius: 16 }}>
+              <Card.Content style={styles.emptyCardContent}>
+                <Icon name={icon} size={48} color={`${color}40`} style={styles.emptyIcon} />
+                <Text variant="titleMedium" style={[styles.emptyTitle, { color: colors.onSurface }]}>
+                  {title || 'Nenhum agendamento'}
+                </Text>
+                <Text variant="bodyMedium" style={[styles.emptySubtitle, { color: colors.onSurfaceVariant }]}>
+                  {subtitle || 'Toque para continuar'}
+                </Text>
+              </Card.Content>
+            </View>
+          </Card>
+        </TouchableOpacity>
+      </Animated.View>
+    );
   };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleValue, {
-      toValue: 1,
-      friction: 3,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  return (
-    <Animated.View style={{ transform: [{ scale: scaleValue }], marginVertical: 8 }}>
-      <TouchableOpacity onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} activeOpacity={0.8}>
-        <Card style={[styles.card, styles.emptyCard]}>
-      <View style={{ overflow: 'hidden', borderRadius: 16 }}>
-            <Card.Content style={styles.emptyCardContent}>
-              <Icon name={icon} size={48} color={`${color}40`} style={styles.emptyIcon} />
-              <Text variant="titleMedium" style={[styles.emptyTitle, { color: colors.onSurface }]}>
-                {title || 'Nenhum agendamento'}
-              </Text>
-              <Text variant="bodyMedium" style={[styles.emptySubtitle, { color: colors.onSurfaceVariant }]}>
-                {subtitle || 'Toque para continuar'}
-              </Text>
-            </Card.Content>
-          </View>
-        </Card>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
   useEffect(() => {
     if (maisConsultasData.length <= 1) return;
 
@@ -431,7 +436,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
         .map(
           termo => `
           <div style="margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-            <h2 style="color: #AF91F9; font-size: 24px; margin-bottom: 15px; font-weight: 600; text-align: center;">
+            <h2 style="color: #644086; font-size: 24px; margin-bottom: 15px; font-weight: 600; text-align: center;">
               ${termo.des_descricao_tde}
             </h2>
             <div style="font-size: 14px; color: #333; line-height: 1.6;">
@@ -461,7 +466,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             color: #333;
           }
           h2 { 
-            color: #AF91F9; 
+            color: #644086; 
             font-size: 18px; 
             margin-bottom: 15px; 
             font-weight: 600;
@@ -574,10 +579,36 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       setPartnersLoading(false);
     }
   }
+  async function fetchParceirosCredenciados(): Promise<void> {
+    try {
+      setLoading(true);
+      const headers =
+        isLogged && authData.access_token
+          ? generateRequestHeader(authData.access_token)
+          : {
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+              },
+            };
+      const response = await api.get('/parceiro/appcred', headers);
+      const dataApi = response.data;
+      if (dataApi && dataApi.response && dataApi.response.data && dataApi.response.data.length > 0) {
+        setParceirosCredenciados(dataApi.response.data);
+      } else {
+        console.log('Nenhum parceiro credenciado encontrado');
+      }
+    } catch (error: any) {
+      console.error('Erro ao buscar parceiros credenciados:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useFocusEffect(
     useCallback(() => {
       fetchParceiros();
+      fetchParceirosCredenciados();
     }, []),
   );
 
@@ -651,6 +682,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
         if (resp.status == 200) {
           const { data: content } = resp;
           setContracts(content.response.data);
+          console.log('Contratos fetched:', content.response.data);
           // Check if any contract has telemedicine active
           const hasTelemed = content.response.data.some((contract: Contrato) => contract.inclui_telemedicina_pla === 1);
           setHasTelemedicine(hasTelemed);
@@ -670,6 +702,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       fetchSchedules(authData.access_token),
       fetchLastHistoricSchedule(),
       fetchParceiros(),
+      fetchParceirosCredenciados(),
     ])
       .then(_ => {})
       .catch(err => {
@@ -679,6 +712,38 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
         setLoading(false);
       });
   }
+  const renderCredenciadosItem = ({ item }: { item: Parceiro }) => {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => {
+          setSelectedParceiroCredenciadoId(item.id_parceiro_prc);
+          setModalCredenciadosVisible(true);
+        }}
+        style={[styles.credenciadoCard, { backgroundColor: '#f7f7f7' }]}>
+        <View style={styles.credenciadoContent}>
+          <Image
+            source={item.img_parceiro_prc ? { uri: `${item.img_parceiro_prc}` } : require('../../assets/images/logonova.png')}
+            style={[styles.credenciadoImage, { width: 80, height: 80 }]}
+          />
+          <View style={styles.credenciadoInfo}>
+            <Text variant="titleMedium" style={[styles.credenciadoTitle, { color: colors.primary }]}>
+              {item.des_nome_fantasia_prc}
+            </Text>
+            <Text variant="bodySmall" style={[styles.credenciadoLocation, { color: colors.primary }]}>
+              {item.des_municipio_mun}
+            </Text>
+            <View style={[styles.credenciadoBadge, { backgroundColor: colors.corpadrao }]}>
+              <Text variant="labelSmall" style={[styles.credenciadoBadgeText, { color: colors.onPrimary }]}>
+                Credenciado
+              </Text>
+            </View>
+          </View>
+          <IconButton icon="chevron-right" size={24} iconColor={colors.primary} style={styles.credenciadoArrow} />
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderPromoIndicator = () => {
     return (
@@ -826,71 +891,54 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       ) : loading ? (
         <LoadingFull title="Carregando..." />
       ) : (
-      <View style={styles.container}>
-  <LinearGradient
-    colors={['#AF91F9', '#f15c2ec2']}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    style={{
-      height: Platform.select({
-        ios: Platform.isPad ? SCREEN_HEIGHT * 0.2 : SCREEN_HEIGHT * 0.35,
-        android: Platform.isPad ? SCREEN_HEIGHT * 0.5 : SCREEN_HEIGHT * 0.35,
-      }),
-      justifyContent: 'flex-start',
-      alignItems: 'center',
-      paddingTop: Platform.select({
-        ios: Platform.isPad ? 10 : 0,
-        android: Platform.isPad ? 10 : 0,
-      }),
-      }}
-  >
-    <Image
-      source={require('../../assets/images/logotransparente.png')}
-      style={styles.logo}
-      resizeMode="contain"
-    />
-    <View style={styles.welcomeContainer}>
-      <Text style={styles.welcomeText}>
-        Olá {dadosUsuarioData.pessoaDados?.des_genero_pes || ''}!!
-      </Text>
-      <Text style={styles.subtitleText}>
-        {dadosUsuarioData.pessoaDados?.des_sexo_biologico_pes === 'M'
-          ? 'Seja Bem Vindo.'
-          : dadosUsuarioData.pessoaDados?.des_sexo_biologico_pes === 'F'
-          ? 'Seja Bem Vinda.'
-          : 'Seja Bem Vindo(a).'}
-      </Text>
-    </View>
-  </LinearGradient>
+        <View style={styles.container}>
+         <LinearGradient
+            colors={['#AF91F9', '#f15d4d']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              height: Platform.select({
+                ios: Platform.isPad ? SCREEN_HEIGHT * 0.2 : SCREEN_HEIGHT * 0.35,
+                android: Platform.isPad ? SCREEN_HEIGHT * 0.5 : SCREEN_HEIGHT * 0.35,
+              }),
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              paddingTop: Platform.select({
+                ios: Platform.isPad ? 10 : 0,
+                android: Platform.isPad ? 10 : 0,
+              }),
+            }}>
+            <Image source={require('../../assets/images/logotransparente.png')} style={styles.logo} resizeMode="contain" />
+            <View style={styles.welcomeContainer}>
+              <Text style={styles.welcomeText}>Olá {dadosUsuarioData.pessoaDados?.des_genero_pes || ''}!!</Text>
+              <Text style={styles.subtitleText}>
+                {dadosUsuarioData.pessoaDados?.des_sexo_biologico_pes === 'M'
+                  ? 'Seja Bem Vindo.'
+                  : dadosUsuarioData.pessoaDados?.des_sexo_biologico_pes === 'F'
+                  ? 'Seja Bem Vinda.'
+                  : 'Seja Bem Vindo(a).'}
+              </Text>
+            </View>
+          </LinearGradient>
 
 
           <ScrollView style={styles.whiteSection} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {error && <Text style={{ color: 'red', textAlign: 'center', marginVertical: 10 }}>{error}</Text>}
 
             {/* Telemedicine Card Section */}
-            {hasTelemedicine && (
-              <View style={styles.sectionContainer}>
-                <View style={styles.sectionHeader}>
-                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor, marginBottom: 10 }]}>
-                    Telemedicina
-                  </Text>
-                </View>
-                <TelemedicineCard onPress={handleTelemedicinePress} />
-              </View>
-            )}
 
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor }]}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
                   Nossos Parceiros
                 </Text>
-                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.textcolor }} onPress={() => navigation.navigate('ParceirosScreen', { partnerType: 'regular' })}>
+                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.primary }} onPress={() => navigation.navigate('ParceirosScreen', { partnerType: 'regular' })}>
                   Ver todos
                 </Button>
               </View>
               {partnersLoading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator animating={true} size="small" color={colors.textcolor} />
+                  <ActivityIndicator animating={true} size="small" color={colors.primary} />
                 </View>
               ) : parceiros.length > 0 ? (
                 <>
@@ -924,10 +972,54 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                 <Text style={{ textAlign: 'center', color: colors.onSurfaceVariant, marginTop: 10 }}>Nenhum parceiro disponível no momento.</Text>
               )}
             </View>
+            {hasTelemedicine && (
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary, marginBottom: 10 }]}>
+                    Telemedicina
+                  </Text>
+                </View>
+                <TelemedicineCard onPress={handleTelemedicinePress} />
+              </View>
+            )}
+            {/* Seção de Credenciados */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
+                  Nossos Credenciados
+                </Text>
+                <Button
+                  mode="text"
+                  compact
+                  labelStyle={{ fontSize: 12, color: colors.primary }}
+                  onPress={() => navigation.navigate('ParceirosScreen', { partnerType: 'accredited' })}>
+                  Ver todos
+                </Button>
+              </View>
+
+              {parceirosCredenciados.length > 0 ? (
+                <FlatList
+                  data={parceirosCredenciados}
+                  renderItem={renderCredenciadosItem}
+                  keyExtractor={item => item.id_parceiro_prc.toString()}
+                  scrollEnabled={false}
+                  contentContainerStyle={styles.credenciadosList}
+                  ListFooterComponent={<View style={{ height: 10 }} />}
+                />
+              ) : (
+                <Card mode="elevated" style={[styles.card, { backgroundColor: colors.surface }]}>
+                  <Card.Content style={styles.emptyCardContent}>
+                    <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant, textAlign: 'center' }}>
+                      Nenhum credenciado disponível no momento
+                    </Text>
+                  </Card.Content>
+                </Card>
+              )}
+            </View>
 
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor }]}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
                   Marcar Consultas
                 </Text>
               </View>
@@ -939,7 +1031,6 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{
                     marginTop: 16,
-                    paddingVertical: 8,
                     width: '100%',
                   }}
                   onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollXPromo } } }], { useNativeDriver: true })}
@@ -952,16 +1043,16 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             {/* Próximos Agendamentos */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor }]}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
                   Próximos Agendamentos
                 </Text>
-                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.textcolor }} onPress={() => navigate('user-schedules')}>
+                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.primary }} onPress={() => navigate('user-schedules')}>
                   Ver todos
                 </Button>
               </View>
 
               {schedulesLoading ? (
-                <ActivityIndicator style={{ marginTop: 10 }} color={colors.textcolor} />
+                <ActivityIndicator style={{ marginTop: 10 }} color={colors.primary} />
               ) : userSchedules.length === 0 ? (
                 <EmptyAppointmentCard type="next" onPress={() => navigate('user-schedules')} />
               ) : (
@@ -972,10 +1063,10 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             {/* Histórico de Agendamentos */}
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.textcolor }]}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
                   Histórico de Agendamentos
                 </Text>
-                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.textcolor }} onPress={() => navigate('user-shcdules-history-screen')}>
+                <Button mode="text" compact labelStyle={{ fontSize: 12, color: colors.primary }} onPress={() => navigate('user-shcdules-history-screen')}>
                   Ver histórico
                 </Button>
               </View>
@@ -1007,7 +1098,130 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                 handlePress={status => setAgendamentosDialogVisible(status)}
               />
             </Portal>
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalCredenciadosVisible}
+              onRequestClose={() => {
+                setModalCredenciadosVisible(false);
+              }}>
+              <TouchableWithoutFeedback onPress={() => setModalCredenciadosVisible(false)}>
+                <View style={styles.modalOverlay} />
+              </TouchableWithoutFeedback>
 
+              <View style={styles.modalContainer}>
+  {selectedParceiroCredenciadoId &&
+    (() => {
+      const selectedParceiro = parceirosCredenciados.find(
+        p => p.id_parceiro_prc === selectedParceiroCredenciadoId
+      );
+
+      if (!selectedParceiro) return null;
+
+      const openWhatsApp = () => {
+        const phone = selectedParceiro.num_celular_prc?.replace(/\D/g, ''); // remove caracteres não numéricos
+        if (!phone) {
+          Alert.alert('Número de WhatsApp não disponível');
+          return;
+        }
+
+        const message = encodeURIComponent(
+  `Olá, quero fazer um agendamento com ${selectedParceiro.des_nome_fantasia_prc}. Pode me informar as opções disponíveis?`
+);
+        const url = `https://wa.me/55${phone}?text=${message}`;
+        Linking.openURL(url);
+      };
+
+      return (
+        <>
+          <Image
+            source={
+              selectedParceiro.img_parceiro_prc
+                ? { uri: `${selectedParceiro.img_parceiro_prc}` }
+                : require('../../assets/images/logonova.png')
+            }
+            style={styles.modalImage}
+          />
+          <View style={styles.modalContent}>
+            <Text variant="titleLarge" style={styles.modalTitle}>
+              {selectedParceiro.des_nome_fantasia_prc}
+            </Text>
+            <Text variant="bodyMedium" style={styles.modalDescription}>
+              {selectedParceiro.des_razao_social_prc} -{' '}
+              {selectedParceiro.des_endereco_prc}, {selectedParceiro.des_bairro_prc},{' '}
+              {selectedParceiro.des_municipio_mun}
+            </Text>
+
+            <Text variant="titleSmall" style={styles.modalSectionTitle}>
+              Contato:
+            </Text>
+            <View style={styles.benefitItem}>
+              <IconButton
+                icon="email"
+                size={16}
+                iconColor={colors.primary}
+                style={styles.benefitIcon}
+              />
+              <Text variant="bodyMedium" style={styles.benefitText}>
+                {selectedParceiro.des_email_responsavel_prc}
+              </Text>
+            </View>
+            <View style={styles.benefitItem}>
+              <IconButton
+                icon="phone"
+                size={16}
+                iconColor={colors.primary}
+                style={styles.benefitIcon}
+              />
+              <Text variant="bodyMedium" style={styles.benefitText}>
+                {selectedParceiro.num_celular_prc || selectedParceiro.num_telefone_prc}
+              </Text>
+            </View>
+
+            {/* NOVO BOTÃO DE AGENDAMENTO */}
+            <Button
+              mode="contained"
+              icon="whatsapp"
+              onPress={openWhatsApp}
+              style={{
+                marginTop: 12,
+                backgroundColor: '#25D366', // verde WhatsApp
+                borderRadius: 8,
+              }}
+              labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+            >
+              Fazer um agendamento
+            </Button>
+
+            <Text variant="titleSmall" style={styles.modalSectionTitle}>
+              Dados:
+            </Text>
+            <View style={styles.benefitItem}>
+              <IconButton
+                icon="card-text"
+                size={16}
+                iconColor={colors.primary}
+                style={styles.benefitIcon}
+              />
+              <Text variant="bodyMedium" style={styles.benefitText}>
+                Descrição: {selectedParceiro.des_parceiro_prc || 'N/A'}
+              </Text>
+            </View>
+
+            <Button
+              mode="outlined"
+              onPress={() => setModalCredenciadosVisible(false)}
+              style={styles.modalCloseButton}
+              labelStyle={styles.modalCloseButtonText}
+            >
+              Fechar
+            </Button>
+          </View>
+        </>
+      );
+    })()}
+</View>
+            </Modal>
             <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
               <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
                 <View style={styles.modalOverlay} />
@@ -1039,13 +1253,6 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                                 {selectedParceiro.des_email_responsavel_prc}
                               </Text>
                             </View>
-                              <View style={styles.benefitItem}>
-                              <IconButton icon="phone" size={16} iconColor={colors.primary} style={styles.benefitIcon} />
-                              <Text variant="bodyMedium" style={styles.benefitText}>
-                                {selectedParceiro.num_celular_prc}
-                              </Text>
-                            </View>
-                            
                             <Text variant="titleSmall" style={styles.modalSectionTitle}>
                               Descrição:
                             </Text>
@@ -1055,16 +1262,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                                 {selectedParceiro.des_parceiro_prc || 'N/A'}
                               </Text>
                             </View>
-                            {/* <Button
-                              mode="contained"
-                              onPress={() => {
-                                setModalVisible(false);
-                                navigation.navigate('ParceirosScreen', { partnerType: 'regular' });
-                              }}
-                              style={styles.modalButton}
-                              labelStyle={styles.modalButtonText}>
-                              Ver mais detalhes
-                            </Button> */}
+
                             <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.modalCloseButton} labelStyle={styles.modalCloseButtonText}>
                               Fechar
                             </Button>
@@ -1101,11 +1299,19 @@ const styles = StyleSheet.create({
       android: Platform.isPad ? 10 : 15,
     }),
   },
-  logo: {
-    width: 200,
-    height: 170,
-    marginTop: Platform.OS === 'ios' ? -20 : 30, // 20 para iOS, 10 para Android
-  },
+  logo:
+    Platform.select({
+      ios: {
+        width: 200,
+        height: 220,
+        marginTop: -30,
+      },
+      android: {
+        width: 200,
+        height: 170,
+        marginTop: 30,
+      },
+    }) || {},
   welcomeContainer: {
     alignItems: 'center',
     marginTop: -40,
@@ -1123,7 +1329,7 @@ const styles = StyleSheet.create({
   },
   whiteSection: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     marginTop: Platform.OS === 'ios' ? -100 : -95, // 20 para iOS, 10 para Android
 
     borderTopLeftRadius: 20,
@@ -1149,15 +1355,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
- emptyCard: {
-  justifyContent: 'center',       // centraliza verticalmente
-  alignItems: 'center',           // centraliza horizontalmente
-  minHeight: 140,                 // altura mínima
-  borderColor: '#AF91F9',         // cor da borda
-  borderWidth: 1,                  // largura da borda
-  borderRadius: 12,                // cantos arredondados (opcional)
-  padding: 16,                     // espaçamento interno
-},
+  emptyCard: {
+    justifyContent: 'center', // centraliza verticalmente
+    alignItems: 'center', // centraliza horizontalmente
+    minHeight: 140, // altura mínima
+    borderColor: '#AF91F9', // cor da borda
+    borderWidth: 1, // largura da borda
+    borderRadius: 12, // cantos arredondados (opcional)
+    padding: 16, // espaçamento interno
+  },
 
   scheduleCardContent: {
     flexDirection: 'row',
@@ -1514,6 +1720,58 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
   },
+
+  credenciadosList: {
+    paddingTop: 8, // Reduzido para equilíbrio
+  },
+ 
+  credenciadoCard: {
+    borderRadius: 10, // Reduzido para proporção
+    marginBottom: 10, // Reduzido para espaço adequado
+    elevation: 2, // Reduzido para sombra mais suave
+    overflow: 'hidden',
+    backgroundColor: '#f8f8f8',
+    padding: 10, // Adicionado padding interno para exibir botões
+  },
+  credenciadoContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    
+    padding: 10, // Reduzido para equilíbrio
+  },
+  credenciadoImage: {
+    width: 50, // Reduzido para evitar dominância
+    height: 50,
+    borderRadius: 8, // Reduzido para consistência
+    marginRight: 10, // Reduzido para equilíbrio
+  },
+  credenciadoInfo: {
+    flex: 1,
+  },
+  credenciadoTitle: {
+    fontWeight: '600',
+    fontSize: 14, // Reduzido para legibilidade sem zoom
+    marginBottom: 4, // Reduzido para equilíbrio
+  },
+  credenciadoLocation: {
+    marginBottom: 6, // Reduzido para harmonia
+    color: '#666',
+  },
+  credenciadoBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 4, // Reduzido para proporção
+    paddingHorizontal: 6, // Reduzido para equilíbrio
+    paddingVertical: 4, // Reduzido para equilíbrio
+  },
+  credenciadoBadgeText: {
+    fontWeight: '500',
+    fontSize: 12, // Reduzido para harmonia
+  },
+  credenciadoArrow: {
+    margin: 0,
+    marginLeft: 8, // Reduzido para equilíbrio
+  },
+
 });
 
 export default LoggedHome;

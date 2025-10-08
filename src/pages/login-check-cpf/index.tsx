@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Alert, Image, TouchableWithoutFeedback, Keyboard, Platform, ImageBackground, Dimensions } from 'react-native';
+import { View, StyleSheet, Image, Platform, ImageBackground, Dimensions, TouchableOpacity } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput, Button, Card, Text, useTheme } from 'react-native-paper';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,12 +12,13 @@ import { LoginSchema } from '../../form-objects/login-form-object';
 import { useDadosUsuario } from '../../context/pessoa-dados-context';
 import { useAuth } from '../../context/AuthContext';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { reset } from '../../router/navigationRef';
+import { reset, goHome } from '../../router/navigationRef';
 import CustomToast from '../../components/custom-toast';
 import ModalContainer from '../../components/modal';
 import EsqueceuSenhaForm from './esqueceu-senha-form';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Animated } from 'react-native'; // Adicione esta importação no topo
+import { Animated } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Importação do ícone
 
 const { width } = Dimensions.get('window');
 const LAST_LOGGED_CPF_KEY = 'last_logged_cpf';
@@ -132,16 +133,17 @@ export default function LoginCheckCpf({ navigation, routeAfterLogin }: { navigat
 
   return (
     <ImageBackground source={require('../../assets/images/fundologin.png')} style={styles.background} resizeMode="cover">
-<KeyboardAwareScrollView
-  keyboardShouldPersistTaps="handled"
-  contentContainerStyle={styles.container}
-  scrollEnabled={false} // 🔹 impede scroll ao segurar no iOS
->
-        <ModalContainer visible={isRecoverPassworrdModalVisible} handleVisible={() => setIsRecoverPassworrdModalVisible(false)}>
-          <EsqueceuSenhaForm />
-        </ModalContainer>
-
+      <KeyboardAwareScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.container}
+        scrollEnabled={false}
+      >
         <View style={styles.contentWrapper}>
+          {/* Ícone de voltar no canto superior esquerdo */}
+{/* <TouchableOpacity style={styles.backButton} onPress={goHome}>
+  <Icon name="arrow-left" size={24} color={colors.onSurface} />
+</TouchableOpacity> */}
+
           <View style={styles.logoContainer}>
             <Image source={require('../../assets/images/logonova.png')} style={{ width: width * 0.6, height: width * 0.2 }} />
           </View>
@@ -239,12 +241,19 @@ export default function LoginCheckCpf({ navigation, routeAfterLogin }: { navigat
                   style={[styles.button, { backgroundColor: colors.textcolor }]}
                   labelStyle={{ color: colors.onPrimary }}
                   contentStyle={styles.buttonContent}
-                  disabled={!isConnected || loading}>
+                  disabled={!isConnected || loading}
+                >
                   {loading ? 'Acessando...' : 'Entrar'}
                 </Button>
 
                 <View style={styles.linksContainer}>
-                  <Button mode="text" onPress={() => setIsRecoverPassworrdModalVisible(true)} style={styles.linkButton} labelStyle={{ color: colors.textcolor1 }} compact>
+                  <Button
+                    mode="text"
+                    onPress={() => setIsRecoverPassworrdModalVisible(true)}
+                    style={styles.linkButton}
+                    labelStyle={{ color: colors.textcolor1 }}
+                    compact
+                  >
                     Esqueci minha senha
                   </Button>
                   <Text style={[styles.dividerText, { color: colors.textcolor1 }]}>|</Text>
@@ -253,7 +262,8 @@ export default function LoginCheckCpf({ navigation, routeAfterLogin }: { navigat
                     onPress={() => navigation.navigate('register-step-one', { tipo: 'NEW_USER' })}
                     style={styles.linkButton}
                     labelStyle={{ color: colors.textcolor1 }}
-                    compact>
+                    compact
+                  >
                     Criar conta
                   </Button>
                 </View>
@@ -263,7 +273,9 @@ export default function LoginCheckCpf({ navigation, routeAfterLogin }: { navigat
 
           {!isConnected && (
             <View style={styles.connectionWarning}>
-              <Text style={[styles.errorText, { color: colors.error }]}>Você está offline. Conecte-se à internet para continuar.</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                Você está offline. Conecte-se à internet para continuar.
+              </Text>
             </View>
           )}
         </View>
@@ -284,7 +296,21 @@ const styles = StyleSheet.create({
   contentWrapper: {
     alignItems: 'center',
     zIndex: 1,
+    position: 'relative', // Necessário para posicionar o botão de voltar
   },
+  backButton: {
+  position: 'absolute',
+  top: Platform.OS === 'ios' && width >= 768 ? 20 : -130,
+  left: 10,
+  zIndex: 2, // Garante que o botão fique acima de outros elementos
+
+  // Adicionando estilo visual
+  backgroundColor: '#fff', // Cor de fundo (você pode usar colors.primary ou algo similar)
+  borderRadius: 24,           // Deixa o botão circular (ajuste conforme o padding)
+  padding: 4,                // Espaço interno para dar espaço ao ícone
+  borderWidth: 2,             // Espessura da borda (opcional)
+  borderColor: '#A497FB',        // Cor da borda (opcional)
+},
   logoContainer: {
     marginBottom: Platform.OS === 'ios' && width >= 768 ? 48 : 32,
     alignItems: 'center',

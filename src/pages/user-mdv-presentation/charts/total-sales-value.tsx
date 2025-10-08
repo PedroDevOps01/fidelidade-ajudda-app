@@ -23,7 +23,7 @@ export default function TotalSalesValue({ salesData, currentMdv }: { salesData: 
     salesData.length > 0
       ? [
           {
-            value: salesData.reduce((sum, item) => sum + (item.vlr_parcela_ppg ?? 0), 0),
+            value: salesData.reduce((sum, item) => sum + (item.valor_pago ?? 0), 0),
             label: 'Total Vendido',
             frontColor: colors.primary,
           },

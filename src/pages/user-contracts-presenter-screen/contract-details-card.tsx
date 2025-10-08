@@ -7,7 +7,6 @@ import { ActivityIndicator } from 'react-native';
 import { fetchPlanoPagamentoByPlanoPadrao, PaymentMethod } from './fetchPlanoPagamentoByPlanoPadrao';
 import { fetchPlanoPagamentoByPlano, PaymentMethodCortesia } from './fetchPlanoPagamentoByPlano';
 import { useAuth } from '../../context/AuthContext';
-import LinearGradient from 'react-native-linear-gradient';
 import { useDadosUsuario } from '../../context/pessoa-dados-context';
 import { api } from '../../network/api';
 import { goHome } from '../../router/navigationRef';
@@ -43,7 +42,6 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
   const { authData } = useAuth();
   const [selectingPlan, setSelectingPlan] = useState(false);
 
-// console.log(JSON.stringify(dadosUsuarioData, null, 2));
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
       toValue: 0.98,
@@ -87,46 +85,43 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
   }, [contract.id_plano_pla]);
 
   const handlePlanSelection = async () => {
-  if (dadosUsuarioData?.pessoaDados?.is_tipo_contratante_pda) {
-    try {
-      setSelectingPlan(true); // 👈 novo estado
+    if (dadosUsuarioData?.pessoaDados?.is_tipo_contratante_pda) {
+      try {
+        setSelectingPlan(true);
+        const paymentMethods = await fetchPlanoPagamentoByPlano(contract.id_plano_pla, authData.access_token);
+        if (paymentMethods.length === 0) {
+          console.error('Nenhuma forma de pagamento encontrada para o plano.');
+          return;
+        }
 
-      const paymentMethods = await fetchPlanoPagamentoByPlano(contract.id_plano_pla, authData.access_token);
-      if (paymentMethods.length === 0) {
-        console.error('Nenhuma forma de pagamento encontrada para o plano.');
-        return;
+        const selectedPaymentMethod = paymentMethods[0];
+        const dataToSend = {
+          id_pessoa_ctt: dadosUsuarioData.pessoaDados.id_pessoa_pes,
+          id_plano_pagamento_ctt: selectedPaymentMethod.id_plano_pagamento_ppg,
+          id_situacao_ctt: 15,
+          id_origem_ctt: 12,
+          id_vendedor_mdv_ctt: null,
+        };
+
+        const response = await api.post('/contrato/cortesia', dataToSend, {
+          headers: {
+            Authorization: `Bearer ${authData.access_token}`,
+          },
+        });
+
+        console.log('Contrato cortesia criado com sucesso:', response.data);
+        goHome();
+      } catch (error) {
+        console.error('Erro ao criar contrato cortesia:', error);
+      } finally {
+        setSelectingPlan(false);
       }
-
-      const selectedPaymentMethod = paymentMethods[0];
-      const dataToSend = {
-        id_pessoa_ctt: dadosUsuarioData.pessoaDados.id_pessoa_pes,
-        id_plano_pagamento_ctt: selectedPaymentMethod.id_plano_pagamento_ppg,
-        id_situacao_ctt: 15,
-        id_origem_ctt: 12,
-        id_vendedor_mdv_ctt: null,
-      };
-
-      const response = await api.post('/contrato/cortesia', dataToSend, {
-        headers: {
-          Authorization: `Bearer ${authData.access_token}`,
-        },
-      });
-
-      console.log('Contrato cortesia criado com sucesso:', response.data);
-
-      goHome(); // ✅ redireciona
-    } catch (error) {
-      console.error('Erro ao criar contrato cortesia:', error);
-    } finally {
-      setSelectingPlan(false); // 👈 reset do estado
+    } else {
+      onPress();
     }
-  } else {
-    onPress();
-  }
-};
+  };
 
-
-  const CardContainer = isPopular ? LinearGradient : View;
+  const CardContainer = View; // Removido LinearGradient, usando backgroundColor
 
   return (
     <Animated.View 
@@ -136,15 +131,15 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
       ]}
     >
       <TouchableRipple
-        onPress={handlePlanSelection}
+        onPress={selectingPlan ? undefined : handlePlanSelection} // Disable during loading
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={[styles.touchable, isPopular && styles.popularTouchable]}
-        rippleColor="rgba(255, 255, 255, 0.3)"
+        rippleColor="rgba(255, 255, 255, 0.2)"
+        disabled={selectingPlan} // Disable ripple when selecting
       >
         <CardContainer
-          colors={isPopular ? ['#ea7c5bc2', '#AF91F9'] : ['#FFF', '#FFF']}
-          style={[styles.card, isPopular && styles.popularCard]}
+          style={[styles.card, isPopular && styles.popularCard, { backgroundColor: isPopular ? '#A497FB' : '#FFF' }]}
         >
           <View style={styles.cardHeader}>
             <View style={styles.planNameContainer}>
@@ -207,9 +202,7 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
                     </View>
                   ))
                 ) : (
-                  <View style={styles.noPaymentContainer}>
-                   
-                  </View>
+                  <View style={styles.noPaymentContainer} />
                 )}
               </View>
             )}
@@ -250,60 +243,94 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
             </View>
           )}
 
-         <View style={[styles.selectButton, isPopular && styles.popularSelectButton]}>
-  {selectingPlan ? (
-    <ActivityIndicator size="small" color={isPopular ? '#AF91F9' : '#FFF'} />
-  ) : (
-    <>
-      <Text style={[styles.selectButtonText, isPopular && styles.popularSelectButtonText]}>
-        Selecionar Plano
-      </Text>
-      <Icon
-        name="arrow-forward"
-        size={18}
-        color={isPopular ? colors.primary : '#FFF'}
-        style={styles.arrowIcon}
-      />
-    </>
-  )}
-</View>
+          <View style={[styles.selectButton, isPopular && styles.popularSelectButton]}>
+            {selectingPlan ? (
+              <ActivityIndicator size="small" color={isPopular ? '#A497FB' : '#FFF'} />
+            ) : (
+              <>
+                <Text style={[styles.selectButtonText, isPopular && styles.popularSelectButtonText]}>
+                  Selecionar Plano
+                </Text>
+                <Icon
+                  name="arrow-forward"
+                  size={18}
+                  color={isPopular ? colors.primary : '#FFF'}
+                  style={styles.arrowIcon}
+                />
+              </>
+            )}
+          </View>
         </CardContainer>
       </TouchableRipple>
     </Animated.View>
   );
 }
 
-// Styles remain the same
+// Styles
 const styles = StyleSheet.create({
   cardShadow: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
     marginVertical: 8,
-    marginHorizontal: 4,
+    marginHorizontal: 0,
+    marginTop: 15,
   },
   touchable: {
-    borderRadius: 20,
+    borderRadius: 16,
+    marginVertical: 8,
     backgroundColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: '#EEE',
     overflow: 'hidden',
   },
   popularTouchable: {
-    shadowColor: '#ea7c5bc2',
+    backgroundColor: '#A497FB',
+    borderColor: 'transparent',
+    shadowColor: '#A497FB',
     shadowOpacity: 0.3,
-    shadowRadius: 20,
   },
   card: {
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 24,
-    position: 'relative',
+    overflow: 'hidden',
+    minHeight: 420, // Altura mínima para ambos os cartões
   },
   popularCard: {
-    minHeight: 420,
+        minHeight: 120, // Altura mínima para ambos os cartões
+
+    backgroundColor: '#A497FB',
+  },
+  popularBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  popularBadgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
   },
   cardHeader: {
-    marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   planNameContainer: {
     flexDirection: 'row',
@@ -311,10 +338,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   planName: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     flex: 1,
-    letterSpacing: -0.5,
   },
   popularIcon: {
     padding: 6,
@@ -322,18 +348,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   priceContainer: {
-    marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginBottom: 16,
   },
   priceText: {
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: -1,
+    fontSize: 28,
+    fontWeight: 'bold',
   },
   priceLabel: {
-    fontSize: 15,
-    marginTop: 4,
+    fontSize: 16,
+    marginBottom: 4,
+    marginLeft: 4,
     fontWeight: '500',
-    opacity: 0.9,
   },
   paymentMethodsContainer: {
     marginBottom: 5,
@@ -363,7 +390,7 @@ const styles = StyleSheet.create({
   firstPaymentMethod: {
     backgroundColor: 'rgba(175, 145, 249, 0.1)',
     borderLeftWidth: 3,
-    borderLeftColor: '#AF91F9',
+    borderLeftColor: '#A497FB',
   },
   paymentMethodIcon: {
     marginRight: 8,
@@ -380,79 +407,61 @@ const styles = StyleSheet.create({
     padding: 0,
     opacity: 0.7,
   },
-  noPaymentText: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 8,
-  },
   divider: {
     height: 1,
-    marginVertical: 16,
+    marginVertical: 12,
   },
   featuresContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   featureItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    alignItems: 'center',
+    marginBottom: 8,
   },
   featureIcon: {
-    marginRight: 12,
-    marginTop: 2,
+    marginRight: 8,
   },
   featureText: {
     fontSize: 15,
     flex: 1,
     fontWeight: '500',
-    lineHeight: 20,
   },
   dependentsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    padding: 16,
-    borderRadius: 12,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
     backgroundColor: 'rgba(0,0,0,0.03)',
   },
   popularDependents: {
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
   },
   dependentsText: {
     fontSize: 14,
-    marginLeft: 10,
-    fontWeight: '600',
+    marginLeft: 8,
+    fontWeight: '500',
   },
   selectButton: {
     flexDirection: 'row',
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#AF91F9',
-    shadowColor: '#AF91F9',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    backgroundColor: '#A497FB',
   },
   popularSelectButton: {
     backgroundColor: '#FFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
   },
   selectButtonText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#FFF',
-    letterSpacing: 0.5,
   },
   popularSelectButtonText: {
-    color: '#ea7c5bc2',
+    color: '#A497FB',
   },
   arrowIcon: {
     marginLeft: 8,
