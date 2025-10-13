@@ -1303,7 +1303,7 @@ const styles = StyleSheet.create({
     Platform.select({
       ios: {
         width: 200,
-        height: 220,
+        height: 205,
         marginTop: -30,
       },
       android: {
@@ -1406,7 +1406,7 @@ const styles = StyleSheet.create({
   termsHeader: {
     backgroundColor: '#AF91F9',
     padding: 25,
-    paddingTop: 15,
+    paddingTop: Platform.OS === 'android' ? 40 : 15, // Topo maior no Android
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
     elevation: 4,

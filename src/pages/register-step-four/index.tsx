@@ -201,27 +201,23 @@ const RegisterStepFour = ({ route, navigation }: { route: any; navigation: any }
         )}
       />
 
-      <Controller
-  control={control}
-  name="num_telefone_pes"
-  render={({ field: { onChange, value } }) => {
-    const displayValue = value ? applyPhoneMask(value, 10) : '';
-    return (
-      <TextInput
-        label="Número de telefone"
-        keyboardType="number-pad"
-        value={displayValue}
-        onChangeText={e => {
-          const rawValue = e.replace(/\D/g, ''); // remove máscara
-          onChange(rawValue);
-        }}
-        mode="outlined"
-        style={styles.input}
-        error={!!errors.num_telefone_pes}
-      />
-    );
-  }}
-/>
+      {/* <Controller
+        control={control}
+        name="num_telefone_pes"
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            label="Número de telefone"
+            keyboardType="number-pad"
+            value={value!}
+            onChangeText={e => {
+              onChange(applyPhoneMask(e, 10));
+            }}
+            mode="outlined"
+            style={styles.input}
+            error={!!errors.num_telefone_pes}
+          />
+        )}
+      /> */}
 
       <View>
         <Button mode="contained" loading={loading} disabled={loading} onPress={handleSubmit(onSubmit, onError)}>

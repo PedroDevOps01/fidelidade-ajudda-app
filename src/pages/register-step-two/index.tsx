@@ -1,22 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
-import { Button, ProgressBar, TextInput, useTheme } from 'react-native-paper';
+import { Button, ProgressBar, TextInput, Checkbox, useTheme } from 'react-native-paper';
 import { usePessoaCreate } from '../../context/create-pessoa-context';
 import { api } from '../../network/api';
 import axios from 'axios';
 import { z } from 'zod';
-import { stepTwoSchema } from '../../form-objects/step-two-form';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 require('dayjs/locale/pt-br');
 
+// Modified schema to handle conditional validation
+const dynamicStepTwoSchema = (noCep: boolean) =>
+  z.object({
+    cod_cep_pda: noCep ? z.string().optional() : z.string().min(8, 'CEP deve ter 8 dígitos').max(8, 'CEP deve ter 8 dígitos'),
+    des_bairro_pda: z.string().min(1, 'Bairro é obrigatório'),
+    des_endereco_completo_pda: z.string().min(1, 'Endereço completo é obrigatório'), // Made always required, as it's derived
+    des_endereco_pda: z.string().min(1, 'Endereço é obrigatório'),
+    id_municipio_pda: noCep ? z.number().optional() : z.number().min(1, 'Município é obrigatório'),
+    num_endereco_pda: z.string().min(1, 'Número é obrigatório'),
+    des_ponto_referencia_pda: z.string().min(1, 'Ponto de referência é obrigatório'),
+  });
+
+type StepTwoSchemaFormType = z.infer<ReturnType<typeof dynamicStepTwoSchema>>;
+
 const RegisterStepTwo = ({ route, navigation }: { route: any; navigation: any }) => {
   const theme = useTheme();
-
   const { pessoaCreateData, setPessoaCreateData } = usePessoaCreate();
+  const [noCep, setNoCep] = useState(false); // State for "Não sei meu CEP" checkbox
 
-  type StepTwoSchemaFormType = z.infer<typeof stepTwoSchema>;
   const {
     control,
     handleSubmit,
@@ -25,7 +37,7 @@ const RegisterStepTwo = ({ route, navigation }: { route: any; navigation: any })
     watch,
     formState: { errors },
   } = useForm<StepTwoSchemaFormType>({
-    resolver: zodResolver(stepTwoSchema),
+    resolver: zodResolver(dynamicStepTwoSchema(noCep)),
     defaultValues: {
       cod_cep_pda: pessoaCreateData.cod_cep_pda ?? '',
       des_bairro_pda: pessoaCreateData.des_bairro_pda ?? '',
@@ -46,10 +58,12 @@ const RegisterStepTwo = ({ route, navigation }: { route: any; navigation: any })
     setLoading(true);
     try {
       const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+      console.log('getAddressByCep response', response);
       const { data } = response;
+      console.log('getAddressByCep data', data);
       setAddressData(data);
     } catch (err: any) {
-      Alert.alert('Aviso', 'Erro ao consultar dados. Tente mais tarde.');
+      Alert.alert('Aviso', 'Erro, CEP não encontrado. Tente mais tarde.');
       console.log('getAddressByCep', err);
     } finally {
       setLoading(false);
@@ -63,8 +77,9 @@ const RegisterStepTwo = ({ route, navigation }: { route: any; navigation: any })
       const { data } = response;
       const municpioId = data.response.data.filter((e: any) => e.des_municipio_mun === municipio)[0].id_municipio_mun;
       setValue('id_municipio_pda', municpioId);
+      console.log('municpioId', municpioId);
     } catch (err: any) {
-      Alert.alert('Aviso', 'Erro ao consultar dados. Tente mais tarde.');
+      Alert.alert('Aviso', 'Erro, município não encontrado. Tente mais tarde.');
       console.log('getMunicipioId', err);
     } finally {
       setLoading(false);
@@ -72,22 +87,55 @@ const RegisterStepTwo = ({ route, navigation }: { route: any; navigation: any })
   };
 
   useEffect(() => {
-    if (addressData) {
+    if (addressData && !noCep) {
+      console.log('addressData', addressData);
+      console.log('addressData', noCep);
+
+      // Preencher os campos do formulário com os dados retornados
       setValue('des_endereco_pda', addressData!.logradouro);
       setValue('des_bairro_pda', addressData!.bairro);
+      setValue('des_endereco_completo_pda', addressData!.logradouro ? `${addressData!.logradouro} ${getValues().num_endereco_pda}`.trim().substring(0, 100) : ''); // Fixed to trim and 100 chars
       getMunicipioId(addressData?.localidade!);
     }
-  }, [addressData]);
+  }, [addressData, noCep]);
+
+  useEffect(() => {
+    if (noCep) {
+      setValue('id_municipio_pda', 0); // Clear municipio ID
+      // setValue('des_endereco_completo_pda', ''); // Already commented out
+    } else if (codCepPda.length === 8) {
+      getAddressByCep(codCepPda);
+    }
+  }, [codCepPda, noCep]);
+
+  // New effect: Dynamically update des_endereco_completo_pda on changes to des_endereco_pda or num_endereco_pda
+  useEffect(() => {
+    const endereco = getValues('des_endereco_pda');
+    const num = getValues('num_endereco_pda');
+    if (endereco && num) {
+      const completo = `${endereco} ${num}`.trim().substring(0, 100);
+      setValue('des_endereco_completo_pda', completo, { shouldValidate: true });
+    }
+  }, [watch('des_endereco_pda'), watch('num_endereco_pda')]);
+
+  // Update form validation when noCep changes
+  useEffect(() => {
+    // Trigger re-validation for affected fields
+    setValue('cod_cep_pda', getValues('cod_cep_pda'), { shouldValidate: true });
+    setValue('id_municipio_pda', getValues('id_municipio_pda'), { shouldValidate: true });
+    setValue('des_endereco_completo_pda', getValues('des_endereco_completo_pda'), { shouldValidate: true });
+  }, [noCep]);
 
   const onSubmit = (data: StepTwoSchemaFormType) => {
+    const enderecoCompleto = `${data.num_endereco_pda}`.trim().substring(0, 100);
+    console.log('enderecoCompleto', enderecoCompleto);
     const localData = {
       ...pessoaCreateData,
       ...data,
-      des_endereco_completo_pda: `${getValues().des_endereco_pda} ${getValues().num_endereco_pda}`.substring(0, 10),
+      des_endereco_completo_pda: enderecoCompleto, // Always set, no conditional
     };
-
+    console.log('StepTwoSchemaFormType', localData);  
     setPessoaCreateData(localData);
-
     navigation.navigate('register-step-three');
   };
 
@@ -95,20 +143,23 @@ const RegisterStepTwo = ({ route, navigation }: { route: any; navigation: any })
     console.log('step two errors', err);
   };
 
-  useEffect(() => {
-    if (codCepPda.length === 8) {
-      getAddressByCep(codCepPda);
-    }
-  }, [codCepPda]);
-
   return (
     <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
-      
       <ProgressBar progress={0.4} color={theme.colors.primary} style={{ height: 8, borderRadius: 4, marginBottom: 16 }} />
       <Text style={[styles.title, { color: theme.colors.primary }]}>Informe os dados sobre o seu endereço</Text>
 
       <View>
         <View style={styles.section}>
+          <View style={styles.checkboxContainer}>
+            <Checkbox.Android
+              status={noCep ? 'checked' : 'unchecked'}
+              onPress={() => setNoCep(!noCep)}
+              color={theme.colors.primary}
+              uncheckedColor={theme.colors.onSurface}
+            />
+            <Text style={styles.checkboxLabel}>Não sei meu CEP</Text>
+          </View>
+
           <Controller
             control={control}
             name="cod_cep_pda"
@@ -122,6 +173,7 @@ const RegisterStepTwo = ({ route, navigation }: { route: any; navigation: any })
                 onChangeText={onChange}
                 value={value}
                 keyboardType="number-pad"
+                maxLength={8}
                 style={styles.input}
               />
             )}
@@ -170,7 +222,6 @@ const RegisterStepTwo = ({ route, navigation }: { route: any; navigation: any })
               <TextInput
                 label="Bairro"
                 numberOfLines={1}
-                multiline={false}
                 disabled={loading}
                 mode="outlined"
                 error={!!errors.des_bairro_pda}
@@ -218,29 +269,31 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     color: '#333',
   },
-  form: {
-    flex: 1,
-  },
   section: {},
   rowStyle: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    alignItems: 'flex-start', // adiciona isso
+  },
+  form: {
+    flex: 1,
   },
   input: {
     marginBottom: 16,
+    height: 50, // altura padrão recomendada pela react-native-paper
   },
   halfWidth: {
     width: '48%',
   },
-  footer: {
-    justifyContent: 'flex-end',
-    paddingVertical: 16,
-    bottom: 10,
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  buttonText: {
+  checkboxLabel: {
     fontSize: 16,
-    color: 'white',
+    color: '#333',
   },
 });
 

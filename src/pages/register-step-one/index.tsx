@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { Button, ProgressBar, TextInput, useTheme } from 'react-native-paper';
 import { DatePickerInput } from 'react-native-paper-dates';
 import { usePessoaCreate } from '../../context/create-pessoa-context';
@@ -89,6 +89,8 @@ const RegisterStepOne = () => {
   };
 
   return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+
     <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ProgressBar progress={0.2} color={theme.colors.primary} style={{ height: 8, borderRadius: 4, marginBottom: 16 }} />
       <Text style={[styles.title, { color: theme.colors.primary }]}>Vamos precisar de algumas informações antes de continuar</Text>
@@ -146,6 +148,8 @@ const RegisterStepOne = () => {
         </Button>
       </View>
     </KeyboardAwareScrollView>
+      </SafeAreaView>
+
   );
 };
 

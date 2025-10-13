@@ -32,7 +32,7 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
       des_estado_civil_pda: pessoaCreateData.des_estado_civil_pda ?? '',
       des_genero_pes: pessoaCreateData.des_genero_pes ?? '',
       des_sexo_biologico_pes: pessoaCreateData.des_sexo_biologico_pes ?? '',
-      dta_emissao_rg_pda: pessoaCreateData.dta_emissao_rg_pda ?? '',
+      dta_emissao_rg_pda: '2020-01-01', // valor mocado fixo
       id_situacao_pda: pessoaCreateData.id_situacao_pda ?? '',
       vlr_renda_mensal_pda: pessoaCreateData.vlr_renda_mensal_pda ?? 100,
       des_nome_mae_pda: pessoaCreateData.des_nome_mae_pda ?? '',
@@ -163,7 +163,7 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
         )}
       />
 
-      {/* Data de Emissão RG */}
+      {/* Data de Emissão RG
       <Controller
         control={control}
         name="dta_emissao_rg_pda"
@@ -183,7 +183,7 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
             hasError={!!errors.dta_emissao_rg_pda}
           />
         )}
-      />
+      /> */}
 
       {/* Email */}
       <Controller
