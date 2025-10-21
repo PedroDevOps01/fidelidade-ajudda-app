@@ -45,7 +45,7 @@ export default function ParceiroDataScreen({navigation}: ParceiroDataScreenProps
   useEffect(() => {
     if (parceiroData?.response.data) {
       const {data} = parceiroData?.response;7
-
+      console.log('data', data[0]);
       setValue('des_nome_fantasia_prc', data[0].des_nome_fantasia_prc ?? '');
       setValue('des_razao_social_prc', data[0].des_razao_social_prc ?? '');
       setValue('des_endereco_web_prc', data[0].des_endereco_web_prc ?? '');

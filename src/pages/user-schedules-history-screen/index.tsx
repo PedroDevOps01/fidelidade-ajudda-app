@@ -76,7 +76,6 @@ const UserSchedulesHistoryScreen = ({ navigation }: { navigation: any }) => {
     const cod_paciente = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
 
     if (!token || !authData.access_token) {
-      CustomToast('Erro ao carregar os dados. Tente novamente mais tarde!', colors);
       setLoading(false);
       return;
     }
@@ -97,7 +96,6 @@ setUserSchedules(data);
 setFilteredSchedules(data);
     } catch (error) {
       console.error('Erro ao carregar histórico de agendamentos:', error);
-      CustomToast('Erro ao carregar os dados. Tente novamente mais tarde!', colors);
       setUserSchedules([]);
       setFilteredSchedules([]);
     } finally {

@@ -121,7 +121,7 @@ export default function UserProcedureTime({ navigation, route }: UserProcedureTi
     navigate('user-login-screen-exams');
     return;
   }
-
+console.log('dadosUsuarioData', JSON.stringify(dadosUsuarioData, null, 2));
   // 🚨 Verificação de assinatura antes de seguir
   if (assinante && !dadosUsuarioData.pessoaAssinatura?.assinatura_liberada) {
     Alert.alert(

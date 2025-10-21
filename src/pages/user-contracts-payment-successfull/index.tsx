@@ -33,7 +33,6 @@ export default function UserContractPaymentSuccessfull() {
   }, []);
 
   const handlePress = async () => {
-    goHome();
     const response = await api.get(
       `/refresh/${dadosUsuarioData.pessoaDados?.id_pessoa_pes}`,
       generateRequestHeader(authData.access_token)
@@ -49,6 +48,8 @@ export default function UserContractPaymentSuccessfull() {
         user: data.user,
       });
     }
+        goHome();
+
   };
 
   return (

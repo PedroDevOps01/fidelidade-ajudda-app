@@ -100,7 +100,6 @@ export default function UserSchedulesScreen({ navigation }: { navigation: any })
       }
     } catch (err: any) {
       //console.log(err);
-      CustomToast('Erro ao carregar agendamentos. Tente novamente mais tarde', colors);
     } finally {
       setLoading(false);
     }

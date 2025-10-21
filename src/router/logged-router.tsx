@@ -163,7 +163,9 @@ const LoggedDrawerNavigator: React.FC = () => {
         name="ParceirosScreen"
         component={PartnersScreen}
         options={{
-          presentation: 'modal',
+          // presentation: 'modal',
+    headerBackTitle: 'Voltar', // só afeta iOS
+
           title: 'Nossos Parceiros',
           headerShown: true,
           headerTitleAlign: 'center',

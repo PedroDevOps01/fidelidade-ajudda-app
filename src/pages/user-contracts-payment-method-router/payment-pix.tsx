@@ -25,7 +25,7 @@ export default function PaymentPix() {
   const { colors } = useTheme();
   const { dadosUsuarioData, setDadosUsuarioData } = useDadosUsuario();
   const [pixResponse, setPixResponse] = useState<PixResponse>();
-  
+
   const [loading, setLoading] = useState(true);
   const { idFormaPagamento, contratoParcela, contratoCreated, plano } = useAccquirePlan();
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -38,10 +38,7 @@ export default function PaymentPix() {
 
   async function getSignatureDataAfterPixPaid() {
     try {
-      const response = await api.get(
-        `/pessoa/${dadosUsuarioData.pessoaDados?.id_pessoa_pes}/signature`,
-        generateRequestHeader(authData.access_token)
-      );
+      const response = await api.get(`/pessoa/${dadosUsuarioData.pessoaDados?.id_pessoa_pes}/signature`, generateRequestHeader(authData.access_token));
       if (response.status == 200) {
         setDadosUsuarioData({
           ...dadosUsuarioData,
@@ -58,11 +55,8 @@ export default function PaymentPix() {
   async function checkPaid(cod_pagamento: string) {
     setErrorMessage('');
     console.log('Verificando pagamento...');
-    const response = await api.get(
-      `/integracaoPagarMe/verificarPagamento?cod_pedido_pgm=${cod_pagamento}`,
-      generateRequestHeader(authData.access_token)
-    );
-console.log(response);
+    const response = await api.get(`/integracaoPagarMe/verificarPagamento?cod_pedido_pgm=${cod_pagamento}`, generateRequestHeader(authData.access_token));
+    console.log(response);
     if (response.status == 200) {
       const status = response.data.response[0]?.des_status_pgm;
       if (status === 'paid') await getSignatureDataAfterPixPaid();
@@ -74,16 +68,11 @@ console.log(response);
   }
 
   async function requestPayment() {
-
     if (!idFormaPagamento || !contratoParcela || !plano) {
       setErrorMessage(
-        `Dados de pagamento inválidos. Faltando: ${[
-          !idFormaPagamento && 'Forma de Pagamento',
-          !contratoParcela && 'Parcela do Contrato',
-          !plano && 'Plano',
-        ]
+        `Dados de pagamento inválidos. Faltando: ${[!idFormaPagamento && 'Forma de Pagamento', !contratoParcela && 'Parcela do Contrato', !plano && 'Plano']
           .filter(Boolean)
-          .join(', ')}`
+          .join(', ')}`,
       );
       toast.error('Dados de pagamento inválidos.', { position: 'bottom-center' });
       setLoading(false);
@@ -94,13 +83,13 @@ console.log(response);
     setLoading(true);
     console.log('Solicitando pagamento...');
     try {
-          const { vlr_adesao_pla = 0 } = plano;
+      const { vlr_adesao_pla = 0 } = plano;
 
       const baseData = {
         id_origem_pagamento_cpp: 7,
         cod_origem_pagamento_cpp: contratoParcela?.id_contrato_parcela_config_cpc,
         num_cod_externo_cpp: 0,
-              vlr_adesao_pla,
+        vlr_adesao_pla,
 
         dta_pagamento_cpp: dayjs().format('YYYY-MM-DD'),
         id_origem_cpp: 7,
@@ -169,12 +158,7 @@ console.log(response);
               </View>
 
               <View style={styles.qrContainer}>
-                <Chip
-                  icon="information-outline"
-                  mode="outlined"
-                  style={[styles.chip, { borderColor: colors.primaryContainer }]}
-                  textStyle={{ color: colors.onSurface }}
-                >
+                <Chip icon="information-outline" mode="outlined" style={[styles.chip, { borderColor: colors.primaryContainer }]} textStyle={{ color: colors.onSurface }}>
                   Escaneie o QR Code
                 </Chip>
 
@@ -188,8 +172,7 @@ console.log(response);
                 icon="content-copy"
                 onPress={copyToClipboard}
                 style={[styles.copyButton, { backgroundColor: colors.primaryContainer }]}
-                labelStyle={[styles.buttonLabel, { color: colors.onPrimaryContainer }]}
-              >
+                labelStyle={[styles.buttonLabel, { color: colors.onPrimaryContainer }]}>
                 Copiar código Pix
               </Button>
             </Card.Content>

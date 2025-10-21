@@ -83,9 +83,13 @@ const UserDataScreen = ({ navigation }: { navigation: any }) => {
               Olá, {dadosUsuarioData.pessoaDados?.des_nome_pes || 'Usuário'}!
             </Text>
             <View style={[styles.statusBadge, { backgroundColor: theme.colors.onPrimary }]}>
-              <Text style={[styles.statusText, { color: theme.colors.primary }]}>
-                {dadosUsuarioData.pessoaDados?.id_situacao_pda == 1 ? 'Plano Ativo' : 'Sem Plano'}
-              </Text>
+           <Text style={[styles.statusText, { color: theme.colors.primary }]}>
+  {dadosUsuarioData.pessoaDados?.id_situacao_pda == 1
+    ? 'Plano Ativo'
+    : dadosUsuarioData.pessoaDados?.id_situacao_pda == 2
+    ? 'Dependente - Plano'
+    : 'Sem Plano'}
+</Text>
             </View>
           </View>
         </View>

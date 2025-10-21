@@ -6,10 +6,11 @@ import { navigate } from '../../router/navigationRef';
 
 const ContratoParcelaDetailsCard = ({ item }: { item: ContratoParcelaDetails }) => {
   const { colors } = useTheme();
-  
+  console.log('Rendering ContratoParcelaDetailsCard for item:', item);
   // Determinar a cor e ícone baseados no status
   const getStatusDetails = () => {
-    if (!item.des_descricao_tsi || item.des_descricao_tsi.includes("Aguardando")) {
+    console.log('item.des_descricao_tsi', item.des_descricao_tsi);
+    if (!item.des_descricao_tsi || item.des_descricao_tsi.includes("Aguardando") || item.des_descricao_tsi.includes("Adesao")) {
       return {
         color: colors.error,
         icon: 'alert-circle-outline',

@@ -6,6 +6,7 @@ import AppRouter from './src/router/app-router';
 import { LightTheme } from './src/themes/app-theme';
 import { AuthProvider } from './src/context/AuthContext';
 import { DadosUsuarioProvider } from './src/context/pessoa-dados-context';
+import { OrientationLocker, PORTRAIT } from 'react-native-orientation-locker';
 
 import { UserCartProvider } from './src/context/user-cart-context';
 import { ConsultasProvider } from './src/context/consultas-context';
@@ -78,6 +79,8 @@ function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+            <OrientationLocker orientation={PORTRAIT} />
+
       <PaperProvider theme={LightTheme}>
         <AuthProvider>
           <DadosUsuarioProvider>

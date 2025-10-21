@@ -79,7 +79,7 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
 
       {/* Sexo Biológico */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: theme.colors.secondary }]}>Sexo Biológico</Text>
+        <Text style={[styles.label, { color: theme.colors.primary }]}>Sexo Biológico</Text>
         <Controller
           control={control}
           name="des_sexo_biologico_pes"
@@ -109,7 +109,7 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
 
       {/* Estado Civil */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: theme.colors.secondary }]}>Estado Civil</Text>
+        <Text style={[styles.label, { color: theme.colors.primary }]}>Estado Civil</Text>
         <Controller
           control={control}
           name="des_estado_civil_pda"

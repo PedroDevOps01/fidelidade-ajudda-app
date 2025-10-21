@@ -31,6 +31,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Este app precisa de acesso à câmera para permitir que você participe de consultas por vídeo com médicos e outros profissionais de saúde. A câmera será usada apenas durante a chamada para capturar sua imagem em tempo real.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Precisamos da sua localização para realizar o check-in na clínica.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Precisamos da sua localização para check-in mesmo quando o app não estiver aberto.</string>
 	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
@@ -38,10 +40,8 @@
 		<key>CheckInPurpose</key>
 		<string>Precisamos da sua localização precisa para o check-in.</string>
 	</dict>
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>Precisamos da sua localização para realizar o check-in na clínica.</string>
-<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-<string>Precisamos da sua localização para realizar o check-in na clínica.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Precisamos da sua localização para realizar o check-in na clínica.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Permitir acesso ao microfone para que você possa gravar mensagens de voz ao entrar em contato com o suporte pelo app.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -96,8 +96,12 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortrait</string>
 	</array>
 	<key>UIUserInterfaceStyle</key>
 	<string>Light</string>
