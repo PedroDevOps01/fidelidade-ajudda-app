@@ -1,20 +1,24 @@
 import { Text, TouchableRipple, useTheme } from 'react-native-paper';
-import { StyleSheet, View, Animated } from 'react-native';
+import { StyleSheet, View, Animated, Alert } from 'react-native';
 import { maskBrazilianCurrency } from '../../utils/app-utils';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { fetchPlanoPagamentoByPlanoPadrao, PaymentMethod } from './fetchPlanoPagamentoByPlanoPadrao';
-import { fetchPlanoPagamentoByPlano, PaymentMethodCortesia } from './fetchPlanoPagamentoByPlano';
+import { fetchPlanoPagamentoByPlano } from './fetchPlanoPagamentoByPlano';
 import { useAuth } from '../../context/AuthContext';
 import { useDadosUsuario } from '../../context/pessoa-dados-context';
 import { api } from '../../network/api';
 import { goHome } from '../../router/navigationRef';
+import { useAccquirePlan } from '../../context/accquirePlanContext';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-interface ContractDetailCardProps {
-  contract: Plano;
-  onPress: () => void;
-}
+// Define the navigation stack param list
+type RootStackParamList = {
+  'user-contracts-payment-method': undefined;
+  // ... other routes as needed
+};
 
 interface Plano {
   id_plano_pla: number;
@@ -32,6 +36,11 @@ interface Plano {
   isLoadingFormasPagamento?: boolean;
 }
 
+interface ContractDetailCardProps {
+  contract: Plano;
+  onPress: () => void;
+}
+
 export default function ContractDetailCard({ contract, onPress }: ContractDetailCardProps) {
   const { colors } = useTheme();
   const isPopular = contract.id_plano_pla === 72;
@@ -41,6 +50,8 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
   const { dadosUsuarioData } = useDadosUsuario();
   const { authData } = useAuth();
   const [selectingPlan, setSelectingPlan] = useState(false);
+  const { setIsAnual, setPlano } = useAccquirePlan();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
@@ -117,11 +128,36 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
         setSelectingPlan(false);
       }
     } else {
-      onPress();
+      Alert.alert(
+        "Escolha o tipo de pagamento",
+        "Como você deseja pagar o plano?",
+        [
+          {
+            text: "Mensal",
+            onPress: () => {
+              setIsAnual(false);
+              setPlano(contract);
+              navigation.navigate('user-contracts-payment-method');
+            }
+          },
+          {
+            text: "Anual",
+            onPress: () => {
+              setIsAnual(true);
+              setPlano(contract);
+              navigation.navigate('user-contracts-payment-method');
+            }
+          },
+          {
+            text: "Cancelar",
+            style: "cancel"
+          }
+        ]
+      );
     }
   };
 
-  const CardContainer = View; // Removido LinearGradient, usando backgroundColor
+  const CardContainer = View;
 
   return (
     <Animated.View 
@@ -131,12 +167,12 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
       ]}
     >
       <TouchableRipple
-        onPress={selectingPlan ? undefined : handlePlanSelection} // Disable during loading
+        onPress={selectingPlan ? undefined : handlePlanSelection}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={[styles.touchable, isPopular && styles.popularTouchable]}
         rippleColor="rgba(255, 255, 255, 0.2)"
-        disabled={selectingPlan} // Disable ripple when selecting
+        disabled={selectingPlan}
       >
         <CardContainer
           style={[styles.card, isPopular && styles.popularCard, { backgroundColor: isPopular ? '#A497FB' : '#FFF' }]}
@@ -163,7 +199,6 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
             </Text>
           </View>
 
-          {/* Payment Methods Section */}
           <View style={styles.paymentMethodsContainer}>
             {loading ? (
               <View style={styles.loadingContainer}>
@@ -175,32 +210,67 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
             ) : (
               <View style={styles.paymentMethods}>
                 {formasPagamento && formasPagamento.length > 0 ? (
-                  formasPagamento.map((forma, index) => (
-                    <View 
-                      key={forma.value} 
-                      style={[
-                        styles.paymentMethodItem,
-                        index === 0 && styles.firstPaymentMethod
-                      ]}
-                    >
-                      <Icon
-                        name="credit-card"
-                        size={14}
-                        color={isPopular ? '#FFD700' : colors.primary}
-                        style={styles.paymentMethodIcon}
-                      />
-                      <Text
-                        style={[
-                          styles.paymentMethodText,
-                          { color: isPopular ? '#FFF' : '#4A5568' },
-                        ]}
-                      >
-                        {forma.label}: {forma.num_parcelas_ppg}{' '}
-                        {forma.num_parcelas_ppg > 1 ? 'parcelas' : 'parcela'} de{' '}
-                        {maskBrazilianCurrency(forma.vlr_parcela_ppg)}
-                      </Text>
-                    </View>
-                  ))
+                  <>
+                    {/* FORMAS DE PAGAMENTO - cada uma com seu VALOR ANUAL */}
+                    {formasPagamento.map((forma) => {
+                      const totalAnual = Number(forma.num_parcelas_ppg) * Number(forma.vlr_parcela_ppg);
+                      return (
+                        <View 
+                          key={forma.value} 
+                          style={[
+                            styles.paymentMethodItem,
+                            forma.is_padrao_ppg ? styles.firstPaymentMethod : undefined,
+                          ]}
+                        >
+                          <Icon
+                            name="credit-card"
+                            size={14}
+                            color={isPopular ? '#FFD700' : colors.primary}
+                            style={styles.paymentMethodIcon}
+                          />
+                          <View style={{ flex: 1 }}>
+                            {/* Linha principal: parcelas x valor */}
+                            <Text
+                              style={[
+                                styles.paymentMethodText,
+                                { color: isPopular ? '#FFF' : '#4A5568' },
+                              ]}
+                            >
+                              {forma.label}: {forma.num_parcelas_ppg}{' '}
+                              {forma.num_parcelas_ppg > 1 ? 'parcelas' : 'parcela'} de{' '}
+                              {maskBrazilianCurrency(forma.vlr_parcela_ppg)}
+                            </Text>
+
+                            {/* Sub-linha: Valor anual desse método */}
+                            <View style={styles.anualRow}>
+                              <Icon
+                                name="calendar-today"
+                                size={13}
+                                color={isPopular ? '#FFD700' : '#A497FB'}
+                                style={{ marginRight: 6 }}
+                              />
+                              <Text
+                                style={[
+                                  styles.anualLabel,
+                                  { color: isPopular ? '#FFD700' : '#6B7280' },
+                                ]}
+                              >
+                                Valor anual:{' '}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.anualValue,
+                                  { color: isPopular ? '#FFD700' : '#4F46E5' },
+                                ]}
+                              >
+                                {maskBrazilianCurrency(totalAnual)}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </>
                 ) : (
                   <View style={styles.noPaymentContainer} />
                 )}
@@ -220,7 +290,7 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
                   <Icon
                     name="check-circle"
                     size={16}
-                    color={isPopular ? '#FFD700' : '#48BB78'}
+                    color={isPopular ? '#FFD700' : '#A497FB'}
                     style={styles.featureIcon}
                   />
                   <Text style={[styles.featureText, { color: isPopular ? '#FFF' : '#2D3748' }]}>
@@ -302,29 +372,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     overflow: 'hidden',
-    minHeight: 420, // Altura mínima para ambos os cartões
+    minHeight: 420,
   },
   popularCard: {
-        minHeight: 120, // Altura mínima para ambos os cartões
-
+    minHeight: 120,
     backgroundColor: '#A497FB',
-  },
-  popularBadge: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  popularBadgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginLeft: 4,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -399,6 +451,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
+  },
+  anualRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  anualLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  anualValue: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   noPaymentContainer: {
     flexDirection: 'row',

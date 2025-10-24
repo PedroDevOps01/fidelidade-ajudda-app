@@ -5,7 +5,7 @@ export const api = axios.create({
   //baseURL: 'http://52.20.221.114/backend-apresentacaoh/api',
    baseURL: 'http://52.20.221.114/fidelidade/api',
   //baseURL: 'http://52.20.221.114/backend-dediqteste/api/',
-  timeout: 15000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

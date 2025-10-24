@@ -21,15 +21,6 @@ const UserSelectPaymentMethod = () => {
   const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const data = await fetchOptionsAutoFormaPagamentoContract(authData.access_token);
-      setFormasPagamento(data);
-      setLoading(false);
-    })();
-  }, []);
-
   const handleSubmit = (selectedFormasPagamento: string) => {
     if (!selectedFormasPagamento) {
       CustomToast('Selecione uma forma de pagamento.', colors);

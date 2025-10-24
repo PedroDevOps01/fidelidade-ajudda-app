@@ -22,11 +22,15 @@ export default function UserContractsPaymentMethod() {
     try {
       const request = await api.get('/formapagamento?is_ativo_fmp=1', generateRequestHeader(authData.access_token));
       const { data } = request;
+    
       if (request.status === 200) {
         const trueData: FormaPagamento[] = data.response.data;
+          console.log(trueData);
         if (trueData) {
           const filtered = trueData.filter(e => e.id_forma_pagamento_fmp.toString().length > 4);
+          console.log(filtered)
           setFormasPagamento(filtered);
+        
           console.log(data.response.data.length);
         }
       }

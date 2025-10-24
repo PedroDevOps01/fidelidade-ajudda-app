@@ -11,17 +11,36 @@ import PaymentPix from './payment-pix';
 import PaymentCreditCard from './payment-credit-card';
 import PaymentBoleto from './payment-boleto';
 import { reset } from '../../router/navigationRef';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+  'user-contracts-payment-method': undefined;
+  'logged-home-screen': undefined;
+};
+
+interface PlanoPagamento {
+  id_plano_pagamento_ppg: number;
+  num_parcelas_ppg: number;
+  vlr_parcela_ppg: number;
+  is_anual: boolean;
+}
+
+interface Plano {
+  id_plano_pla: number;
+  vlr_adesao_pla: number | null;
+}
 
 export default function UserContractsPaymentMethodRouter() {
   const { colors } = useTheme();
   const { authData } = useAuth();
   const { dadosUsuarioData } = useDadosUsuario();
-  const { idFormaPagamento, plano, setContratoCreated, setContratoParcela } = useAccquirePlan();
+  const { idFormaPagamento, plano, setContratoCreated, setContratoParcela, isAnual, setPlanoPagamento } = useAccquirePlan();
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMessage, setLoadingMessage] = useState<string>();
   const [alertErrorMessage, setAlertErrorMessage] = useState<string>();
   const [alertErrorMessageVisible, setAlertErrorMessageVisible] = useState(false);
-
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const hasFetched = useRef(false);
 
   useEffect(() => {
@@ -55,7 +74,6 @@ export default function UserContractsPaymentMethodRouter() {
       const planoCorreto = data.response.data.find(
         (p: any) => plano && p.id_plano_ppg === plano.id_plano_pla
       );
-
       if (!planoCorreto) {
         setAlertErrorMessage('Plano de pagamento não encontrado para este plano!');
         console.log('Plano de pagamento não encontrado para este plano!');
@@ -63,6 +81,7 @@ export default function UserContractsPaymentMethodRouter() {
         return;
       }
 
+      setPlanoPagamento(planoCorreto); // Save selected payment plan to context
       createContrato(planoCorreto);
       setLoadingMessage('Obtendo informações');
     } catch (err: any) {
@@ -72,18 +91,23 @@ export default function UserContractsPaymentMethodRouter() {
     }
   }
 
-  async function createContrato(planoPagamento: any) {
+  async function createContrato(planoPagamento: PlanoPagamento) {
     console.log('2 - createContrato');
     try {
+      const vlrTotalAnual = isAnual && planoPagamento 
+        ? planoPagamento.num_parcelas_ppg * planoPagamento.vlr_parcela_ppg 
+        : plano?.vlr_adesao_pla || 0;
+
       let dataToSent = {
         id_pessoa_ctt: dadosUsuarioData.pessoaDados?.id_pessoa_pes,
-        vlr_inicial_ctt: plano?.vlr_adesao_pla,
-        vlr_adesao_ctt: plano?.vlr_adesao_pla,
+        vlr_inicial_ctt: vlrTotalAnual,
+        vlr_adesao_ctt: vlrTotalAnual,
         id_plano_pagamento_ctt: planoPagamento?.id_plano_pagamento_ppg,
         id_situacao_ctt: 15,
         id_origem_ctt: 12,
         dta_dia_cpc: Number(getCurrentDate().split('-')[2]),
         vlr_parcela_cpc: planoPagamento?.vlr_parcela_ppg,
+        is_anual: isAnual ? 1 : 0,
         is_mobile: true,
       };
 
@@ -132,7 +156,7 @@ export default function UserContractsPaymentMethodRouter() {
           console.log(`getContratoParcela: No parcels found, retry ${retries + 1}/${maxRetries}`);
           retries++;
           if (retries < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retrying
+            await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
       } catch (err: any) {
@@ -148,44 +172,40 @@ export default function UserContractsPaymentMethodRouter() {
     setLoading(false);
   }
 
- useEffect(() => {
-  if (!hasFetched.current) {
-    hasFetched.current = true;
+  useEffect(() => {
+    if (!hasFetched.current) {
+      hasFetched.current = true;
 
-    (async () => {
-      if (idFormaPagamento === 10003) {
-        // Alerta de confirmação para boleto
-        Alert.alert(
-          'Confirmação de Pagamento',
-          'O pagamento via boleto pode levar até 1 a 3 dias úteis até a compensação. Deseja continuar?',
-          [
-            {
-              text: 'Cancelar',
-              style: 'cancel',
-              onPress: () => {
-                // Volta para a tela anterior (seleção de forma de pagamento)
-                reset([{ name: 'user-contracts-payment-method' }], 0);
+      (async () => {
+        if (idFormaPagamento === 10003) {
+          Alert.alert(
+            'Confirmação de Pagamento',
+            'O pagamento via boleto pode levar até 1 a 3 dias úteis até a compensação. Deseja continuar?',
+            [
+              {
+                text: 'Cancelar',
+                style: 'cancel',
+                onPress: () => {
+                  reset([{ name: 'user-contracts-payment-method' }], 0);
+                },
               },
-            },
-            {
-              text: 'Continuar',
-              onPress: async () => {
-                setLoading(true);
-                await getPlanoPagamentoData();
+              {
+                text: 'Continuar',
+                onPress: async () => {
+                  setLoading(true);
+                  await getPlanoPagamentoData();
+                },
               },
-            },
-          ],
-          { cancelable: false }
-        );
-      } else {
-        setLoading(true);
-        await getPlanoPagamentoData();
-      }
-    })();
-  }
-}, []);
-
-
+            ],
+            { cancelable: false }
+          );
+        } else {
+          setLoading(true);
+          await getPlanoPagamentoData();
+        }
+      })();
+    }
+  }, []);
 
   return (
     <>

@@ -6,10 +6,8 @@ import { navigate } from '../../router/navigationRef';
 
 const ContratoParcelaDetailsCard = ({ item }: { item: ContratoParcelaDetails }) => {
   const { colors } = useTheme();
-  console.log('Rendering ContratoParcelaDetailsCard for item:', item);
   // Determinar a cor e ícone baseados no status
   const getStatusDetails = () => {
-    console.log('item.des_descricao_tsi', item.des_descricao_tsi);
     if (!item.des_descricao_tsi || item.des_descricao_tsi.includes("Aguardando") || item.des_descricao_tsi.includes("Adesao")) {
       return {
         color: colors.error,
@@ -168,17 +166,23 @@ const styles = StyleSheet.create({
 const ParcelasScreen = ({ parcelas }) => {
   const { colors } = useTheme();
   
+  const filteredParcelas = parcelas.filter(
+    item => item.des_descricao_tsi != null && 
+            !item.des_descricao_tsi.includes("Adesao") && 
+            item.id_situacao_cpp !== 17
+  );
+  
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text variant="headlineMedium" style={styles.title}>
+    <View style={[screenStyles.container, { backgroundColor: colors.background }]}>
+      <ScrollView contentContainerStyle={screenStyles.scrollContainer}>
+        <Text variant="headlineMedium" style={screenStyles.title}>
           Minhas Parcelas
         </Text>
-        <Text variant="bodyMedium" style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
-          {parcelas.length} parcelas encontradas
+        <Text variant="bodyMedium" style={[screenStyles.subtitle, { color: colors.onSurfaceVariant }]}>
+          {filteredParcelas.length} parcelas encontradas
         </Text>
         
-        {parcelas.map((item, index) => (
+        {filteredParcelas.map((item, index) => (
           <ContratoParcelaDetailsCard key={index} item={item} />
         ))}
       </ScrollView>

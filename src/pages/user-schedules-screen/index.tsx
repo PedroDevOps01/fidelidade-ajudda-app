@@ -135,7 +135,7 @@ useEffect(() => {
       {loading ? (
         <LoadingFull />
       ) : (
-        <View style={[styles.container, { backgroundColor: '#f7f7f7' }]}>
+        <View style={[styles.container]}>
           {userSchedules.length > 0 ? (
             <FlatList
               data={userSchedules}
@@ -160,6 +160,7 @@ useEffect(() => {
             visible={isFocused}
             icon={'plus'}
             actions={fabOptions}
+            
             onStateChange={({ open }) => setFabGroupVisible(open)}
             fabStyle={styles.fabStyle}
           />

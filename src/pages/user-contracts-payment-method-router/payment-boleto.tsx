@@ -84,6 +84,18 @@ interface BoletoResponse {
   };
 }
 
+interface PlanoPagamento {
+  id_plano_pagamento_ppg: number;
+  num_parcelas_ppg: number;
+  vlr_parcela_ppg: number;
+  is_anual: boolean;
+}
+
+interface Plano {
+  id_plano_pla: number;
+  vlr_adesao_pla: number | null;
+}
+
 export function formatDateToDDMMYYYY(input: string | Date): string {
   let dateString: string;
   if (input instanceof Date) {
@@ -101,7 +113,7 @@ export function formatDateToDDMMYYYY(input: string | Date): string {
 export default function PaymentBoleto() {
   const { colors } = useTheme();
   const { authData } = useAuth();
-  const { idFormaPagamento, contratoParcela, plano, contratoCreated } = useAccquirePlan();
+  const { idFormaPagamento, contratoParcela, plano, contratoCreated, isAnual, planoPagamento } = useAccquirePlan();
   const { dadosUsuarioData, setDadosUsuarioData } = useDadosUsuario();
   const [boletoResponse, setBoletoResponse] = useState<BoletoResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,8 +130,10 @@ export default function PaymentBoleto() {
       contratoParcela,
       plano,
       contratoCreated,
+      isAnual,
+      planoPagamento,
     });
-  }, [idFormaPagamento, contratoParcela, plano, contratoCreated]);
+  }, [idFormaPagamento, contratoParcela, plano, contratoCreated, isAnual, planoPagamento]);
 
   async function checkPaid(cod_pagamento: string) {
     try {
@@ -170,12 +184,13 @@ export default function PaymentBoleto() {
   }
 
   async function requestPayment() {
-    if (!idFormaPagamento || !contratoParcela || !plano) {
+    if (!idFormaPagamento || !contratoParcela || !plano || !planoPagamento) {
       setErrorMessage(
         `Dados de pagamento inválidos. Faltando: ${[
           !idFormaPagamento && 'Forma de Pagamento',
           !contratoParcela && 'Parcela do Contrato',
           !plano && 'Plano',
+          !planoPagamento && 'Plano de Pagamento',
         ]
           .filter(Boolean)
           .join(', ')}`
@@ -193,23 +208,26 @@ export default function PaymentBoleto() {
     }
 
     setLoading(true);
-    const { vlr_adesao_pla = 0 } = plano;
+    const vlrTotalAnual = isAnual && planoPagamento 
+      ? planoPagamento.num_parcelas_ppg * planoPagamento.vlr_parcela_ppg 
+      : plano.vlr_adesao_pla || 0;
 
     const baseData = {
       id_origem_pagamento_cpp: 7,
       cod_origem_pagamento_cpp: contratoParcela.id_contrato_parcela_config_cpc,
       num_cod_externo_cpp: 0,
-      vlr_adesao_pla,
+      vlr_adesao_pla: vlrTotalAnual,
       dta_pagamento_cpp: formatDateToDDMMYYYY(new Date()).split('/').reverse().join('-'),
       id_origem_cpp: 7,
       id_forma_pagamento_cpp: idFormaPagamento,
+      is_anual: isAnual ? 1 : 0,
     };
 
     try {
       console.log('requestPayment sending:', baseData);
       const response = await Promise.race([
         api.post(`/pagamento-parcela`, baseData, generateRequestHeader(authData.access_token)),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 10000)), // 10s timeout
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 10000)),
       ]);
       console.log('requestPayment response:', response.data);
       if (response.status === 200) {
@@ -219,7 +237,7 @@ export default function PaymentBoleto() {
           boleto_url: boleto.boleto_url,
           boleto_barcode: boleto.boleto_barcode,
           boleto_pdf: boleto.boleto_pdf,
-          vlr_parcela_cpp: plano.vlr_adesao_pla,
+          vlr_parcela_cpp: vlrTotalAnual,
           dta_pagamento_cpp: boleto.dta_pagamento_cpp,
           boleto_expiration_date: boleto.boleto_expiration_date,
           customer: boleto.customer,
@@ -308,7 +326,6 @@ export default function PaymentBoleto() {
     }
   };
 
-  // Safe date formatting
   const formatDateSafely = (dateString?: string): string => {
     if (!dateString || isNaN(new Date(dateString).getTime())) {
       return 'N/A';
@@ -329,24 +346,13 @@ export default function PaymentBoleto() {
           onPress={() => {
             setErrorMessage('');
             setLoading(true);
-            alreadyRequested.current = false; // Allow retry
+            alreadyRequested.current = false;
             requestPayment();
           }}
           style={[styles.retryButton, { backgroundColor: colors.primary }]}
         >
           Tentar Novamente
         </Button>
-        {/* <Button
-          mode="outlined"
-          disabled={loading}
-          onPress={() => setIsModalVisible(true)}
-          labelStyle={{ fontSize: 16 }}
-          style={styles.backButton}
-          contentStyle={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={18} color={colors.primary} />
-          <Text style={{ color: colors.primary }}> Voltar</Text>
-        </Button> */}
       </View>
     );
   }
@@ -375,46 +381,7 @@ export default function PaymentBoleto() {
           titleContainerStyle={styles.titleContainer}
         />
         <Card.Content style={styles.content}>
-          
-
           <View style={styles.section}>
-            {/* <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.onSurface }]}>
-              Detalhes do Boleto
-            </Text>
-            <View style={styles.infoRow}>
-              <MaterialCommunityIcons name="cash" size={20} color={colors.onSurfaceVariant} />
-              <Text style={[styles.infoText, { color: colors.onSurface }]}>Valor: {maskBrazilianCurrency(boletoResponse?.vlr_parcela_cpp ?? 0)}</Text>
-            </View>
-            */}
-            {/* {boletoResponse?.items && boletoResponse.items.length > 0 && (
-              <View style={styles.infoRow}>
-                <MaterialCommunityIcons name="information-outline" size={20} color={colors.onSurfaceVariant} />
-                <Text style={[styles.infoText, { color: colors.onSurface }]}>Descrição: {boletoResponse.items[0].description}</Text>
-              </View>
-            )}
-            {boletoResponse?.instructions && (
-              <View style={styles.infoRow}>
-                <MaterialCommunityIcons name="information" size={20} color={colors.onSurfaceVariant} />
-                <Text style={[styles.infoText, { color: colors.onSurface }]}>Instruções: {boletoResponse.instructions}</Text>
-              </View>
-            )}
-            {boletoResponse?.interest && (
-              <View style={styles.infoRow}>
-                <MaterialCommunityIcons name="percent" size={20} color={colors.onSurfaceVariant} />
-                <Text style={[styles.infoText, { color: colors.onSurface }]}>
-                  Juros após vencimento: {boletoResponse.interest.amount}% após {boletoResponse.interest.days} dia(s)
-                </Text>
-              </View>
-            )}
-            {boletoResponse?.fine && (
-              <View style={styles.infoRow}>
-                <MaterialCommunityIcons name="alert" size={20} color={colors.onSurfaceVariant} />
-                <Text style={[styles.infoText, { color: colors.onSurface }]}>
-                  Multa após vencimento: {boletoResponse.fine.amount}% após {boletoResponse.fine.days} dia(s)
-                </Text>
-              </View>
-            )} */}
-          
             <Button
               mode="contained-tonal"
               icon="content-copy"
@@ -433,7 +400,7 @@ export default function PaymentBoleto() {
                 style={[styles.actionButton, { backgroundColor: colors.primary }]}
                 labelStyle={styles.buttonLabel}
               >
-               Visualizar Boleto (HTML)
+                Visualizar Boleto (HTML)
               </Button>
               <Button
                 mode="contained"
@@ -446,27 +413,8 @@ export default function PaymentBoleto() {
               </Button>
             </View>
           </View>
-
-          {/* <View style={styles.statusContainer}>
-            <MaterialCommunityIcons name="timer-outline" size={24} color={colors.onSurfaceVariant} />
-            <Text variant="bodyMedium" style={[styles.statusText, { color: colors.onSurface }]}>
-              Aguardando confirmação do pagamento... (Status: {paymentStatus})
-            </Text>
-          </View> */}
         </Card.Content>
       </Card>
-
-      {/* <Button
-        mode="outlined"
-        disabled={loading}
-        onPress={() => setIsModalVisible(true)}
-        labelStyle={{ fontSize: 16 }}
-        style={styles.backButton}
-        contentStyle={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-      >
-        <MaterialCommunityIcons name="arrow-left" size={18} color={colors.primary} />
-        <Text style={{ color: colors.primary }}> Voltar</Text>
-      </Button> */}
     </ScrollView>
   );
 }
@@ -517,11 +465,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   infoText: {
-    marginLeft: 12,
-    flex: 1,
-    fontSize: 14,
-  },
-  infoTextT: {
     marginLeft: 12,
     flex: 1,
     fontSize: 14,

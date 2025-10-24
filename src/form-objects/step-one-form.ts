@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const stepOneSchema = z.object({
   cod_cpf_pes: z
     .string()
-    .min(11, 'Preencha o CPF ou CNPJ!')
+    .min(11, 'Preencha o CPF!')
     .transform(value => value.replace(/\D/g, '')),
   des_nome_pes: z
     .string()

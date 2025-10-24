@@ -846,8 +846,15 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       {showTerms ? (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
           {termsLoading ? (
-            <View style={[styles.loadingContainer, { backgroundColor: '#ffffff' }]}>
-              <ActivityIndicator animating={true} size="large" color={colors.primary} />
+    <View
+  style={{
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 20,
+  }}
+>              <ActivityIndicator animating={true} size="large" color={colors.primary} />
               <Text style={{ marginTop: 15, color: colors.text, fontSize: 16 }}>Carregando termos...</Text>
             </View>
           ) : termsError ? (
