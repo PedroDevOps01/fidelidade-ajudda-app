@@ -1,20 +1,38 @@
-import dayjs from 'dayjs';
+// form-objects/step-three-form.ts
 import { z } from 'zod';
 
-export const stepThreeSchema = z.object({
-  des_sexo_biologico_pes: z.string().min(1, 'Preencha o sexo biológico!'),
-  des_genero_pes: z.string().min(1, 'Preencha o como quer ser chamado'),
-  des_estado_civil_pda: z.string().min(1, 'Preencha o estado civil!'),
-  cod_rg_pda: z.string().min(5, 'Preencha o numero do RG'),
-  dta_emissao_rg_pda: z
-    .string()
-    .optional()
-    .refine(date => !date || dayjs(date, 'YYYY-MM-DD', true).isValid(), {
-      message: 'Preencha a data corretamente!',
-    }),
-  des_email_pda: z.string().email('Formato de email inválido!'),
-  id_situacao_pda: z.string().min(1, 'Preencha a situação!'),
-  des_nome_mae_pda: z.string().min(1, 'Preencha o nome da mae').max(120, 'Máximo de 120 caracteres.'),
-  vlr_renda_mensal_pda: z.number().min(1, 'Preencha a renda mensal').default(100),
-  des_ocupacao_profissional_pda: z.string().min(1, 'Preencha a ocupação').max(120, 'Máximo de 120 caracteres.'),
-});
+export const dynamicStepThreeSchema = (tipo: 'NEW_USER' | 'DEPENDENT') =>
+  z.object({
+    cod_rg_pda: z
+      .string()
+      .min(1, 'Número do RG é obrigatório')
+      .max(20, 'Número do RG deve ter no máximo 20 dígitos'),
+     des_email_pda: z.string().email('Formato de email inválido!'),
+
+    des_estado_civil_pda: z
+      .string()
+      .min(1, 'Estado civil é obrigatório'),
+    des_genero_pes: z
+      .string()
+      .min(1, 'Gênero é obrigatório'),
+    des_sexo_biologico_pes: z
+      .string()
+      .min(1, 'Sexo biológico é obrigatório'),
+    dta_emissao_rg_pda: z
+      .string()
+      .min(1, 'Data de emissão do RG é obrigatória'),
+    id_situacao_pda: z
+      .string()
+      .min(1, 'Situação é obrigatória'),
+    vlr_renda_mensal_pda: z
+      .number()
+      .min(0, 'Renda mensal deve ser maior ou igual a 0'),
+    des_nome_mae_pda: z
+      .string()
+      .min(1, 'Nome da mãe é obrigatório'),
+    des_ocupacao_profissional_pda: z
+      .string()
+      .min(1, 'Ocupação profissional é obrigatória'),
+  });
+
+export type StepThreeSchemaFormType = z.infer<ReturnType<typeof dynamicStepThreeSchema>>;

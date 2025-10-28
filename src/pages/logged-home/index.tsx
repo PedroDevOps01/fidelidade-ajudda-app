@@ -909,7 +909,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       ) : (
         <View style={styles.container}>
           <LinearGradient
-            colors={['#AF91F9', '#f15d4d']}
+            colors={['#A497FB', '#f15d4d']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -1512,7 +1512,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f7f7f7',
   },
   purpleSection: {
-    backgroundColor: '#AF91F9',
+    backgroundColor: '#A497FB',
     height: Platform.select({
       ios: Platform.isPad ? SCREEN_HEIGHT * 0.2 : SCREEN_HEIGHT * 0.35,
       android: Platform.isPad ? SCREEN_HEIGHT * 0.5 : SCREEN_HEIGHT * 0.35,
@@ -1595,7 +1595,7 @@ actionIcon: { // Estilo para a seta
     justifyContent: 'center', // centraliza verticalmente
     alignItems: 'center', // centraliza horizontalmente
     minHeight: 140, // altura mínima
-    borderColor: '#AF91F9', // cor da borda
+    borderColor: '#A497FB', // cor da borda
     borderWidth: 1, // largura da borda
     borderRadius: 12, // cantos arredondados (opcional)
     padding: 16, // espaçamento interno
@@ -1651,7 +1651,7 @@ actionIcon: { // Estilo para a seta
     marginHorizontal: 4,
   },
   termsHeader: {
-    backgroundColor: '#AF91F9',
+    backgroundColor: '#A497FB',
     padding: 25,
     paddingTop: Platform.OS === 'android' ? 40 : 15, // Topo maior no Android
     borderBottomLeftRadius: 15,
@@ -1819,7 +1819,7 @@ actionIcon: { // Estilo para a seta
     borderRadius: 8,
   },
   telemedicineButtonText: {
-    color: '#AF91F9',
+    color: '#A497FB',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -1836,11 +1836,11 @@ actionIcon: { // Estilo para a seta
   },
   nextAppointmentCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#AF91F9',
+    borderLeftColor: '#A497FB',
   },
   historyCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#AF91F9',
+    borderLeftColor: '#A497FB',
   },
 
   cardContent: {

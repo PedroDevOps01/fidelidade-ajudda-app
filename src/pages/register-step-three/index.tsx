@@ -1,23 +1,30 @@
 import React from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Button, ProgressBar, RadioButton, SegmentedButtons, TextInput, useTheme } from 'react-native-paper';
 import { DatePickerInput } from 'react-native-paper-dates';
 import { usePessoaCreate } from '../../context/create-pessoa-context';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { stepThreeSchema } from '../../form-objects/step-three-form';
+import { dynamicStepThreeSchema } from '../../form-objects/step-three-form';
 import dayjs from 'dayjs';
 import { z } from 'zod';
 import { api } from '../../network/api';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { maskBrazilianCurrency } from '../../utils/app-utils';
+import { toast } from 'sonner-native';
 require('dayjs/locale/pt-br');
 
 const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any }) => {
   const theme = useTheme();
   const { pessoaCreateData, setPessoaCreateData } = usePessoaCreate();
 
-  type StepThreeSchemaFormType = z.infer<typeof stepThreeSchema>;
+  // Obtenha o tipo do contexto
+  const tipo = pessoaCreateData.tipo ?? 'NEW_USER';
+
+  // Log para depurar o tipo
+  console.log('Tipo de usuário em RegisterStepThree:', tipo);
+
+  type StepThreeSchemaFormType = z.infer<ReturnType<typeof dynamicStepThreeSchema>>;
 
   const {
     control,
@@ -25,14 +32,14 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
     setError,
     formState: { errors },
   } = useForm<StepThreeSchemaFormType>({
-    resolver: zodResolver(stepThreeSchema),
+    resolver: zodResolver(dynamicStepThreeSchema(tipo)),
     defaultValues: {
       cod_rg_pda: pessoaCreateData.cod_rg_pda ?? '',
       des_email_pda: pessoaCreateData.des_email_pda ?? '',
       des_estado_civil_pda: pessoaCreateData.des_estado_civil_pda ?? '',
       des_genero_pes: pessoaCreateData.des_genero_pes ?? '',
       des_sexo_biologico_pes: pessoaCreateData.des_sexo_biologico_pes ?? '',
-      dta_emissao_rg_pda: '2020-01-01', // valor mocado fixo
+      dta_emissao_rg_pda: '2020-01-01',
       id_situacao_pda: pessoaCreateData.id_situacao_pda ?? '',
       vlr_renda_mensal_pda: pessoaCreateData.vlr_renda_mensal_pda ?? 100,
       des_nome_mae_pda: pessoaCreateData.des_nome_mae_pda ?? '',
@@ -40,32 +47,39 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
     },
   });
 
-  const onSubmit = (data: StepThreeSchemaFormType) => {
+  const onSubmit = async (data: StepThreeSchemaFormType) => {
     console.log('StepThreeSchemaFormType', data);
 
-    api
-      .get(`/pessoa?des_email_pda=${data.des_email_pda.toLowerCase().trim()}`)
-      .then(result => {
+    // Verifique o e-mail apenas se for titular
+    if (tipo === 'NEW_USER' && data.des_email_pda) {
+      try {
+        const result = await api.get(`/pessoa?des_email_pda=${data.des_email_pda.toLowerCase().trim()}`);
         const { data: dataResp } = result;
 
         if (dataResp.response.data.length > 0) {
-          setError('des_email_pda', { message: 'Email já cadastrado!' }, { shouldFocus: true });
-          Alert.alert('Aviso', 'Já existe um usuário com este email cadastrado!');
+          const isTitular = dataResp.response.data.some((pessoa: any) => pessoa.id_situacao_pda === '1');
+          const errorMessage = isTitular
+            ? 'Este e-mail já está cadastrado como titular!'
+            : 'Este e-mail já está cadastrado no sistema!';
+          
+          setError('des_email_pda', { message: errorMessage }, { shouldFocus: true });
+          toast.error(errorMessage, { position: 'bottom-center' });
           return;
         }
+      } catch (err) {
+        toast.error('Erro ao consultar dados. Tente novamente.', { position: 'bottom-center' });
+        return;
+      }
+    }
 
-        const localData = {
-          ...pessoaCreateData,
-          ...data,
-        };
-        setPessoaCreateData(localData);
+    const localData = {
+      ...pessoaCreateData,
+      ...data,
+    };
+    setPessoaCreateData(localData);
 
-        // Navigate to the next step or perform other actions
-        navigation.navigate('register-step-four');
-      })
-      .catch(err => {
-        Alert.alert('Aviso', 'Erro ao consultar dados. Tente novamente mais tarde.');
-      });
+    // Navigate to the next step
+    navigation.navigate('register-step-four');
   };
 
   const onError = (data: any) => {
@@ -98,9 +112,9 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
         <Text
           style={styles.hintText}
           onPress={() => {
-            Alert.alert(
-              'Aviso',
+            toast.info(
               'Informar o sexo biológico é essencial para garantir um atendimento de saúde mais preciso, orientar diagnósticos, tratamentos adequados e exames preventivos, além de contribuir para estudos e políticas públicas que melhoram a qualidade dos serviços e promovem o bem-estar de todos',
+              { position: 'bottom-center' }
             );
           }}>
           Por que pedimos o sexo biológico?
@@ -125,26 +139,6 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
         />
       </View>
 
-      {/* Situação */}
-      {/* <View style={styles.section}>
-        <Text style={[styles.label, { color: theme.colors.secondary }]}>Situação</Text>
-        <Controller
-          control={control}
-          name="id_situacao_pda"
-          render={({ field: { onChange, value } }) => (
-            <SegmentedButtons
-              value={value}
-              onValueChange={onChange}
-              buttons={[
-                { value: '1', label: 'Titular' },
-                { value: '2', label: 'Dependente' },
-              ]}
-              style={styles.segmentedButtons}
-            />
-          )}
-        />
-      </View> */}
-
       {/* Como gostaria de ser chamado */}
       <Controller
         control={control}
@@ -159,42 +153,49 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
         control={control}
         name="cod_rg_pda"
         render={({ field: { onChange, value } }) => (
-          <TextInput inputMode="numeric" label="Número do RG" value={value} onChangeText={onChange} mode="outlined" style={styles.input} error={!!errors.cod_rg_pda} />
+          <>
+            <TextInput
+              label="Número do RG"
+              inputMode="numeric"
+              value={value}
+              onChangeText={text => {
+                const onlyNumbers = text.replace(/\D/g, '');
+                onChange(onlyNumbers.slice(0, 20));
+              }}
+              mode="outlined"
+              style={styles.input}
+              error={!!errors.cod_rg_pda}
+            />
+            {errors.cod_rg_pda && (
+              <Text style={styles.errorText}>{errors.cod_rg_pda.message}</Text>
+            )}
+          </>
         )}
       />
-
-      {/* Data de Emissão RG
-      <Controller
-        control={control}
-        name="dta_emissao_rg_pda"
-        render={({ field: { onChange, value } }) => (
-          <DatePickerInput
-            locale="pt-BR"
-            label="Data de Emissão RG"
-            withDateFormatInLabel={false}
-            value={value ? dayjs(value).toDate() : undefined}
-            onChange={date => {
-              const formattedDate = date ? dayjs(date).format('YYYY-MM-DD') : '';
-              onChange(formattedDate);
-            }}
-            inputMode="start"
-            style={styles.datePickerInput}
-            mode="outlined"
-            hasError={!!errors.dta_emissao_rg_pda}
-          />
-        )}
-      /> */}
 
       {/* Email */}
       <Controller
         control={control}
         name="des_email_pda"
         render={({ field: { onChange, value } }) => (
-          <TextInput label="Email" value={value} onChangeText={onChange} mode="outlined" keyboardType="email-address" style={styles.input} error={!!errors.des_email_pda} />
+          <>
+            <TextInput
+              label="Email"
+              value={value}
+              onChangeText={onChange}
+              mode="outlined"
+              keyboardType="email-address"
+              style={styles.input}
+              error={!!errors.des_email_pda}
+            />
+            {errors.des_email_pda && (
+              <Text style={styles.errorText}>{errors.des_email_pda.message}</Text>
+            )}
+          </>
         )}
       />
 
-      {/* mae */}
+      {/* Nome da mãe */}
       <Controller
         control={control}
         name="des_nome_mae_pda"
@@ -203,6 +204,7 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
         )}
       />
 
+      {/* Renda mensal */}
       <Controller
         control={control}
         name="vlr_renda_mensal_pda"
@@ -222,7 +224,7 @@ const RegisterStepThree = ({ route, navigation }: { route: any; navigation: any 
         )}
       />
 
-      {/* mae */}
+      {/* Ocupação profissional */}
       <Controller
         control={control}
         name="des_ocupacao_profissional_pda"
@@ -280,6 +282,11 @@ const styles = StyleSheet.create({
   datePickerInput: {
     marginTop: 8,
     marginBottom: 20,
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 13,
+    marginBottom: 8,
   },
   button: {
     marginTop: 16,

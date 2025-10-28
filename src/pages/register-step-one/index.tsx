@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { Button, ProgressBar, TextInput, useTheme } from 'react-native-paper';
 import { DatePickerInput } from 'react-native-paper-dates';
 import { usePessoaCreate } from '../../context/create-pessoa-context';
@@ -25,32 +25,25 @@ type RegisterStepOneRouteParams = {
 const RegisterStepOne = () => {
   const theme = useTheme();
   const { setPessoaCreateData, pessoaCreateData } = usePessoaCreate();
-const validateCpf = (cpf: string): boolean => {
-  // Remove caracteres que não sejam números
-  cpf = cpf.replace(/\D/g, '');
 
-  // Verifica se tem 11 dígitos
-  if (cpf.length !== 11) return false;
-
-  // Verifica se todos os dígitos são iguais
-  if (/^(\d)\1{10}$/.test(cpf)) return false;
-
-  // Valida os dois últimos dígitos (dígitos verificadores)
-  for (let t = 9; t < 11; t++) {
-    let d = 0;
-    for (let c = 0; c < t; c++) {
-      d += parseInt(cpf[c], 10) * ((t + 1) - c);
+  const validateCpf = (cpf: string): boolean => {
+    cpf = cpf.replace(/\D/g, '');
+    if (cpf.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(cpf)) return false;
+    for (let t = 9; t < 11; t++) {
+      let d = 0;
+      for (let c = 0; c < t; c++) {
+        d += parseInt(cpf[c], 10) * ((t + 1) - c);
+      }
+      d = ((10 * d) % 11) % 10;
+      if (parseInt(cpf[t], 10) !== d) return false;
     }
-    d = ((10 * d) % 11) % 10;
-    if (parseInt(cpf[t], 10) !== d) return false;
-  }
+    return true;
+  };
 
-  return true;
-};
   const route = useRoute<RouteProp<RegisterStepOneRouteParams, 'params'>>();
   const tipo = route.params.tipo ?? 'NEW_USER';
 
-  // 🔹 Adicionamos uma regra de até 25 caracteres no schema base
   const schema = stepOneSchema.extend({
     des_nome_pes: z
       .string()
@@ -74,43 +67,51 @@ const validateCpf = (cpf: string): boolean => {
   });
 
   const onSubmit = async (submitData: StepOneSchemaFormType) => {
-  // Valida CPF antes de consultar a API
-  if (!validateCpf(submitData.cod_cpf_pes)) {
-    toast.error('CPF não existe!', { position: 'bottom-center' });
-    return;
-  }
-
-  try {
-    const response = await api.get(`/pessoa?cod_cpf_pes=${submitData.cod_cpf_pes}`);
-    const pessoas = response.data.response?.data ?? [];
-
-    if (pessoas.length > 0) {
-      toast.error('CPF já cadastrado no sistema!', { position: 'bottom-center' });
+    if (!validateCpf(submitData.cod_cpf_pes)) {
+      toast.error('CPF não existe!', { position: 'bottom-center' });
       return;
     }
 
-    const localData = {
-      ...pessoaCreateData,
-      ...submitData,
-      cod_cpf_pes: removeAccents(submitData.cod_cpf_pes),
-      tipo: route.params.tipo,
-      id_situacao_pda: tipo == 'NEW_USER' ? '1' : '2',
-    };
+    try {
+      const response = await api.get(`/pessoa?cod_cpf_pes=${submitData.cod_cpf_pes}`);
+      const pessoas = response.data.response?.data ?? [];
 
-    setPessoaCreateData(localData);
-    navigate('register-step-two');
-  } catch (err) {
-    console.log(err);
-    toast.error('Erro ao validar CPF. Tente novamente.');
-  }
-};
+      if (pessoas.length > 0) {
+        toast.error('CPF já cadastrado no sistema!', { position: 'bottom-center' });
+        return;
+      }
+
+      const localData = {
+        ...pessoaCreateData,
+        ...submitData,
+        cod_cpf_pes: removeAccents(submitData.cod_cpf_pes),
+        tipo: route.params.tipo,
+        id_situacao_pda: tipo === 'NEW_USER' ? '1' : '2',
+      };
+
+      setPessoaCreateData(localData);
+      navigate('register-step-two');
+    } catch (err) {
+      console.log(err);
+      toast.error('Erro ao validar CPF. Tente novamente.');
+    }
+  };
 
   const onError = (errors: any) => {
     console.log('errors', errors);
   };
 
+  // Manage status bar to avoid conflict with date picker
+  useEffect(() => {
+    StatusBar.setBarStyle('dark-content'); // Adjust style as needed
+    return () => {
+      StatusBar.setBarStyle('default'); // Restore default style on unmount
+    };
+  }, []);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <StatusBar barStyle="dark-content" /> {/* Set initial status bar style */}
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -153,7 +154,7 @@ const validateCpf = (cpf: string): boolean => {
               <TextInput
                 label="Nome Completo"
                 mode="outlined"
-                maxLength={25} // 🔹 limita diretamente o input
+                maxLength={25}
                 error={!!errors.des_nome_pes}
                 onBlur={onBlur}
                 onChangeText={onChange}
