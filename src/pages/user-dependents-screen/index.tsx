@@ -142,8 +142,11 @@ export default function UserDependentsScreen() {
     setLoading(true);
     try {
       const contratoId = userContracts.filter(e => e.is_ativo_ctt === 1)[0].id_contrato_ctt;
-      const response = await api.get(`/contrato/${contratoId}/dependente`, generateRequestHeader(authData.access_token));
-      if (response.status === 200) {
+  const response = await api.get(
+      `/contrato/${contratoId}/dependente?is_ativo_rtd=1`, 
+      generateRequestHeader(authData.access_token)
+    );
+          if (response.status === 200) {
         setDependentes(response.data.response.data);
       } else {
         toast.error('Erro ao carregar dependentes!', { position: 'bottom-center' });
