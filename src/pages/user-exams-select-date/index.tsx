@@ -73,13 +73,13 @@ const saveAndContinue = () => {
   const currentHour = dayjs().hour();
 
   // Validação: não permitir agendamento no período da tarde (após 12h)
-  // if (currentHour >= 12) {
-  //   Alert.alert(
-  //     'Atenção',
-  //     'Não é permitido agendar exames no período da tarde (após as 12h).'
-  //   );
-  //   return;
-  // }
+  if (currentHour >= 12) {
+    Alert.alert(
+      'Atenção',
+      'Não é permitido agendar exames no período da tarde (após as 12h).'
+    );
+    return;
+  }
 
   setScheduleRequestData({
     ...scheduleRequest,
