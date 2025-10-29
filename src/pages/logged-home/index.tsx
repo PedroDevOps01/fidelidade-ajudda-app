@@ -69,6 +69,12 @@ interface Termo {
   txt_texto_tde: string;
 }
 
+interface AppointmentCardConfig {
+  title: string;
+  subtitle: string;
+  icon: string;
+  color: string;
+}
 interface Contrato {
   des_descricao_tsi: string;
   des_nome_pes: string;
@@ -104,7 +110,20 @@ const TelemedicineCard: React.FC<{ onPress: () => void }> = ({ onPress }) => {
       useNativeDriver: true,
     }).start();
   };
-
+  const defaultConfig: Record<'next' | 'history', AppointmentCardConfig> = {
+    next: {
+      title: 'Nenhum agendamento',
+      subtitle: 'Toque para agendar uma nova consulta',
+      icon: 'event-available',
+      color: colors.primary,
+    },
+    history: {
+      title: 'Nenhum histórico',
+      subtitle: 'Seus agendamentos aparecerão aqui',
+      icon: 'history',
+      color: colors.primary,
+    },
+  };
   return (
     <Animated.View style={{ transform: [{ scale: scaleValue }], marginBottom: 16 }}>
       <TouchableOpacity onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} activeOpacity={0.8}>
@@ -156,7 +175,8 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
   const [termsError, setTermsError] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-
+  const [lastWaitingSchedule, setLastWaitingSchedule] = useState<UserSchedule | null>(null);
+  const [waitingSchedulesLoading, setWaitingSchedulesLoading] = useState<boolean>(false);
   const maisConsultasData: { id: string; image: any; action: () => void }[] = parceiros.map(parceiro => ({
     id: parceiro.id_parceiro_prc.toString(),
     image: parceiro.img_parceiro_prc ? { uri: `${parceiro.img_parceiro_prc}` } : require('../../assets/images/logonova.png'),
@@ -209,7 +229,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         if (diffDays === 0) return { text: 'Hoje', color: '#FF6B6B', icon: 'today' };
-        if (diffDays === 1) return { text: 'Amanhã', color: '#FFA726', icon: 'event-available' };
+        if (diffDays === 1) return { text: 'Amanhã', color: '#A497FB', icon: 'event-available' };
         if (diffDays <= 7) return { text: `Em ${diffDays} dias`, color: '#42A5F5', icon: 'event' };
         return { text: formatDateToDDMMYYYY(appointment.data), color: colors.onSurfaceVariant, icon: 'calendar-month' };
       } else {
@@ -327,27 +347,36 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
     );
   };
 
-  const EmptyAppointmentCard = ({ type = 'next', onPress }: { type?: 'next' | 'history'; onPress: () => void }) => {
+  const EmptyAppointmentCard = ({
+    type = 'next',
+    onPress,
+    overrideConfig,
+  }: {
+    type?: 'next' | 'history';
+    onPress: () => void;
+    overrideConfig?: { title: string; subtitle: string; icon: string; color: string };
+  }) => {
     const { colors } = useTheme();
     const scaleValue = useRef(new Animated.Value(1)).current;
 
-    const config = {
-      next: {
-        title: 'Nenhum agendamento',
-        subtitle: 'Toque para agendar uma nova consulta',
-        icon: 'event-available',
-        color: colors.primary,
-      },
-      history: {
-        title: 'Nenhum histórico',
-        subtitle: 'Seus agendamentos aparecerão aqui',
-        icon: 'history',
-        color: colors.primary,
-      },
-    };
+    const config =
+      overrideConfig ||
+      {
+        next: {
+          title: 'Nenhum agendamento',
+          subtitle: 'Toque para agendar uma nova consulta',
+          icon: 'event-available',
+          color: colors.primary,
+        },
+        history: {
+          title: 'Nenhum histórico',
+          subtitle: 'Seus agendamentos aparecerão aqui',
+          icon: 'history',
+          color: colors.primary,
+        },
+      }[type];
 
-    const { title, subtitle, icon, color } = config[type];
-
+    const { title, subtitle, icon, color } = config;
     const handlePressIn = () => {
       Animated.spring(scaleValue, {
         toValue: 0.98,
@@ -445,7 +474,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
         .map(
           termo => `
           <div style="margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-            <h2 style="color: #644086; font-size: 24px; margin-bottom: 15px; font-weight: 600; text-align: center;">
+            <h2 style="color: #A497FB; font-size: 24px; margin-bottom: 15px; font-weight: 600; text-align: center;">
               ${termo.des_descricao_tde}
             </h2>
             <div style="font-size: 14px; color: #333; line-height: 1.6;">
@@ -475,7 +504,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             color: #333;
           }
           h2 { 
-            color: #644086; 
+            color: #A497FB; 
             font-size: 18px; 
             margin-bottom: 15px; 
             font-weight: 600;
@@ -545,8 +574,122 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
     setModalVisible(true);
   };
 
+  async function fetchWaitingSchedules(): Promise<void> {
+    const token = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
+    console.log(token)
+    const cod_paciente = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
+        console.log(cod_paciente)
+
+    if (!token || !authData.access_token) return;
+console.log('oi')
+    setWaitingSchedulesLoading(true);
+    try {
+      const response = await api.get(`/integracao/listHistoricoAgendamentos?token_paciente=${token}&cod_paciente=${cod_paciente}`, generateRequestHeader(authData.access_token));
+                  console.log(response)
+
+      const data = response.data || [];
+
+      const waiting = data
+        .filter((item: any) => {
+          return item?.situacao?.trim().toUpperCase() === 'ESPERA';
+        })
+        .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime());
+
+      setLastWaitingSchedule(waiting[0] || null);
+    } catch (error) {
+      console.log('Erro ao buscar sala de espera:', error);
+    } finally {
+      setWaitingSchedulesLoading(false);
+    }
+  }
+
+  const WaitingRoomCard = ({ appointment, onPress }: { appointment: any; onPress: () => void }) => {
+    const { colors } = useTheme();
+    const scaleValue = useRef(new Animated.Value(1)).current;
+
+    const handlePressIn = () => {
+      Animated.spring(scaleValue, {
+        toValue: 0.98,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const handlePressOut = () => {
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    return (
+      <Animated.View style={{ transform: [{ scale: scaleValue }], marginVertical: 8 }}>
+        <TouchableOpacity onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} activeOpacity={0.9}>
+          <Card style={[styles.card, styles.waitingCard]}>
+            <View style={{ overflow: 'hidden', borderRadius: 16 }}>
+              <Card.Content style={styles.cardContent}>
+                {/* Header com Situação */}
+                <View style={styles.cardHeader}>
+                  <View style={styles.statusContainer}>
+                    <Text variant="labelSmall" style={[styles.statusText, { color: '#A497FB' }]}>
+                      Em espera
+                    </Text>
+                  </View>
+                  <Badge style={[styles.waitingBadge, { backgroundColor: '#F1591E' }]}>ESPERA</Badge>
+                </View>
+
+                {/* Main Content */}
+                <View style={styles.mainContent}>
+                  <Image
+                    source={appointment.fachada_profissional ? { uri: appointment.fachada_profissional } : require('../../assets/images/fallback_image.png')}
+                    style={styles.professionalImage}
+                    resizeMode="cover"
+                    onError={() => console.log('Image load error')}
+                  />
+                  <View style={styles.infoContainer}>
+                    <Text variant="titleMedium" style={[styles.procedureName, { color: colors.onSurface }]} numberOfLines={2}>
+                      {Array.isArray(appointment.nome_procedimento) ? appointment.nome_procedimento.join(', ') : appointment.nome_procedimento}
+                    </Text>
+                    <View style={styles.professionalInfo}>
+                      <Icon name="person" size={14} color={colors.primary} />
+                      <Text variant="bodyMedium" style={[styles.professionalName, { color: colors.primary }]} numberOfLines={1}>
+                        {appointment.nome_profissional || 'Profissional não especificado'}
+                      </Text>
+                    </View>
+                    <View style={styles.detailsRow}>
+                      <View style={styles.detailItem}>
+                        <Icon name="access-time" size={14} color={colors.onSurfaceVariant} />
+                        <Text variant="bodySmall" style={[styles.detailText, { color: colors.onSurfaceVariant }]}>
+                          {String(appointment.inicio).substring(0, 5)}
+                        </Text>
+                      </View>
+                      <View style={styles.detailItem}>
+                        <Icon name="location-on" size={14} color={colors.onSurfaceVariant} />
+                        <Text variant="bodySmall" style={[styles.detailText, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
+                          {appointment.nome_unidade}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Footer */}
+                <View style={[styles.cardFooter, { backgroundColor: `${colors.onSecondary}15`, borderTopWidth: 0 }]}>
+                  <Icon name="schedule" size={16} color="#A497FB" />
+                  <Text variant="bodySmall" style={[styles.footerText, { color: colors.onSurfaceVariant }]}>
+                    Aguarde confirmação da clínica
+                  </Text>
+                </View>
+              </Card.Content>
+            </View>
+          </Card>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
   async function fetchLastHistoricSchedule(): Promise<void> {
-    const token = dadosUsuarioData.pessoaDados?.cod_token_pes;
+    const token = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
     const cod_paciente = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
 
     if (!token || !authData.access_token) return;
@@ -631,7 +774,11 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       }
     }, [dadosUsuarioData, authData]),
   );
-
+  useFocusEffect(
+    useCallback(() => {
+      fetchWaitingSchedules(); // ← Chama toda vez que a tela ganha foco
+    }, [dadosUsuarioData, authData]),
+  );
   async function fetchSchedules(access_token: string): Promise<void> {
     const token = dadosUsuarioData.pessoaDados?.cod_token_pes!;
     const cod_paciente = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
@@ -710,6 +857,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       fetchContratos(dadosUsuarioData.user.id_pessoa_usr),
       fetchSchedules(authData.access_token),
       fetchLastHistoricSchedule(),
+      fetchWaitingSchedules(), // ← Adicionado
       fetchParceiros(),
       fetchParceirosCredenciados(),
     ])
@@ -846,15 +994,16 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       {showTerms ? (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
           {termsLoading ? (
-    <View
-  style={{
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 20,
-  }}
->              <ActivityIndicator animating={true} size="large" color={colors.primary} />
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#ffffff',
+                paddingHorizontal: 20,
+              }}>
+              {' '}
+              <ActivityIndicator animating={true} size="large" color={colors.primary} />
               <Text style={{ marginTop: 15, color: colors.text, fontSize: 16 }}>Carregando termos...</Text>
             </View>
           ) : termsError ? (
@@ -1006,9 +1155,13 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             {hasTelemedicine && (
               <View style={styles.sectionContainer}>
                 <View style={styles.sectionHeader}>
-                  <View style={styles.sectionTitleAndIcon}> {/* Agrupando ícone e texto */}
+                  <View style={styles.sectionTitleAndIcon}>
+                    {' '}
+                    {/* Agrupando ícone e texto */}
                     <Icon name="monitor-heart" size={22} color={colors.primary} style={styles.sectionIcon} /> {/* Exemplo de ícone para telemedicina */}
-                    <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary, marginBottom: 0 }]}> {/* Removi o marginBottom do título para alinhar melhor */}
+                    <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary, marginBottom: 0 }]}>
+                      {' '}
+                      {/* Removi o marginBottom do título para alinhar melhor */}
                       Telemedicina
                     </Text>
                   </View>
@@ -1018,7 +1171,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
               </View>
             )}
             {/* Seção de Credenciados */}
-       
+
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionTitleContainer}>
@@ -1139,7 +1292,9 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
 
             {/* Próximos Agendamentos */}
             <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}> {/* Este View agora será o container flex com justify-content: 'space-between' */}
+              <View style={styles.sectionHeader}>
+                {' '}
+                {/* Este View agora será o container flex com justify-content: 'space-between' */}
                 <View style={styles.sectionTitleAndIcon}>
                   <Icon name="event" size={22} color={colors.primary} style={styles.sectionIcon} />
                   <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
@@ -1147,12 +1302,9 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                   </Text>
                 </View>
                 {/* Botão "Ver todos" com ícone de seta */}
-                <Button
-                  mode="text"
-                  compact
-                  labelStyle={[styles.seeAllButton, { color: colors.primary }]}
-                  onPress={() => navigate('user-schedules')}
-                  icon="arrow-right"> {/* Use 'arrow-right' ou 'chevron-right' */}
+                <Button mode="text" compact labelStyle={[styles.seeAllButton, { color: colors.primary }]} onPress={() => navigate('user-schedules')} icon="arrow-right">
+                  {' '}
+                  {/* Use 'arrow-right' ou 'chevron-right' */}
                   Ver todos
                 </Button>
               </View>
@@ -1165,10 +1317,42 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                 <AppointmentCard appointment={userSchedules[0]} onPress={() => navigate('user-schedules')} type="next" />
               )}
             </View>
+            {/* Sala de Espera */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleAndIcon}>
+                  <Icon name="house" size={22} color="#A497FB" style={styles.sectionIcon} />
+                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: '#A497FB' }]}>
+                    Sala de Espera
+                  </Text>
+                </View>
+                <Button mode="text" compact labelStyle={[styles.seeAllButton, { color: '#A497FB' }]} onPress={() => navigate('user-shcdules-wait-screen')} icon="arrow-right">
+                  Ver todos
+                </Button>
+              </View>
 
+              {waitingSchedulesLoading ? (
+                <ActivityIndicator style={{ marginTop: 10 }} color="#A497FB" />
+              ) : lastWaitingSchedule ? (
+                <WaitingRoomCard appointment={lastWaitingSchedule} onPress={() => navigate('user-shcdules-wait-screen')} />
+              ) : (
+                <EmptyAppointmentCard
+                  type="next"
+                  onPress={() => navigate('user-shcdules-wait-screen')}
+                  overrideConfig={{
+                    title: 'Nenhum agendamento em espera',
+                    subtitle: 'Seus agendamentos em espera aparecerão aqui',
+                    icon: 'house',
+                    color: '#A497FB',
+                  }}
+                />
+              )}
+            </View>
             {/* Histórico de Agendamentos */}
             <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}> {/* Este View agora será o container flex com justify-content: 'space-between' */}
+              <View style={styles.sectionHeader}>
+                {' '}
+                {/* Este View agora será o container flex com justify-content: 'space-between' */}
                 <View style={styles.sectionTitleAndIcon}>
                   <Icon name="history" size={22} color={colors.primary} style={styles.sectionIcon} />
                   <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary }]}>
@@ -1181,7 +1365,9 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                   compact
                   labelStyle={[styles.seeAllButton, { color: colors.primary }]}
                   onPress={() => navigate('user-shcdules-history-screen')}
-                  icon="arrow-right"> {/* Use 'arrow-right' ou 'chevron-right' */}
+                  icon="arrow-right">
+                  {' '}
+                  {/* Use 'arrow-right' ou 'chevron-right' */}
                   Ver todos
                 </Button>
               </View>
@@ -1346,113 +1532,97 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                   })()}
               </View>
             </Modal>
-            <Modal 
-  animationType="slide" 
-  transparent={true} 
-  visible={modalVisible} 
-  onRequestClose={() => setModalVisible(false)}
->
-  <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-    <View style={styles.modalOverlay} />
-  </TouchableWithoutFeedback>
+            <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+              <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                <View style={styles.modalOverlay} />
+              </TouchableWithoutFeedback>
 
-  <View style={styles.modalContainer}>
-    {selectedParceiroId && (() => {
-      const selectedParceiro = parceiros.find(p => p.id_parceiro_prc === selectedParceiroId);
+              <View style={styles.modalContainer}>
+                {selectedParceiroId &&
+                  (() => {
+                    const selectedParceiro = parceiros.find(p => p.id_parceiro_prc === selectedParceiroId);
 
-      if (!selectedParceiro) return null;
+                    if (!selectedParceiro) return null;
 
-      return (
-        <>
-          {/* Header do Modal */}
-          <View style={styles.modalHeader}>
-            <View style={styles.modalHeaderContent}>
-              <Text variant="titleLarge" style={styles.modalTitle}>
-                {selectedParceiro.des_nome_fantasia_prc}
-              </Text>
-        
-              <View style={styles.credentialStatus}>
-                <Icon name="store" size={16} color={colors.primary} />
-                <Text style={[styles.credentialStatusText, { color: colors.primary }]}>
-                  Parceiro
-                </Text>
-              </View>
-            </View>
-            <IconButton 
-              icon="close" 
-              size={24} 
-              onPress={() => setModalVisible(false)} 
-              style={styles.modalCloseIcon} 
-            />
-          </View>
+                    return (
+                      <>
+                        {/* Header do Modal */}
+                        <View style={styles.modalHeader}>
+                          <View style={styles.modalHeaderContent}>
+                            <Text variant="titleLarge" style={styles.modalTitle}>
+                              {selectedParceiro.des_nome_fantasia_prc}
+                            </Text>
 
-          {/* Imagem */}
-          <Image
-            source={
-              selectedParceiro.img_parceiro_prc
-                ? { uri: `${selectedParceiro.img_parceiro_prc}` }
-                : require('../../assets/images/logonova.png')
-            }
-            style={styles.modalImage}
-          />
+                            <View style={styles.credentialStatus}>
+                              <Icon name="store" size={16} color={colors.primary} />
+                              <Text style={[styles.credentialStatusText, { color: colors.primary }]}>Parceiro</Text>
+                            </View>
+                          </View>
+                          <IconButton icon="close" size={24} onPress={() => setModalVisible(false)} style={styles.modalCloseIcon} />
+                        </View>
 
-          {/* Conteúdo */}
-          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-            {/* Informações Básicas */}
-            
+                        {/* Imagem */}
+                        <Image
+                          source={selectedParceiro.img_parceiro_prc ? { uri: `${selectedParceiro.img_parceiro_prc}` } : require('../../assets/images/logonova.png')}
+                          style={styles.modalImage}
+                        />
 
-            {/* Contato */}
-            <Card style={styles.infoCard}>
-              <Card.Content>
-                <Text variant="titleSmall" style={styles.sectionTitleModal}>
-                  Contato
-                </Text>
-                
-                {selectedParceiro.des_email_responsavel_prc && (
-                  <TouchableOpacity style={styles.contactItem}>
-                    <Icon name="email" size={20} color="#666" />
-                    <Text variant="bodyMedium" style={styles.contactText}>
-                      {selectedParceiro.des_email_responsavel_prc}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                        {/* Conteúdo */}
+                        <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                          {/* Informações Básicas */}
 
-                {(selectedParceiro.num_celular_prc || selectedParceiro.num_telefone_prc) && (
-                  <TouchableOpacity style={styles.contactItem}>
-                    <Icon name="phone" size={20} color="#666" />
-                    <Text variant="bodyMedium" style={styles.contactText}>
-                      {selectedParceiro.num_celular_prc || selectedParceiro.num_telefone_prc}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                          {/* Contato */}
+                          <Card style={styles.infoCard}>
+                            <Card.Content>
+                              <Text variant="titleSmall" style={styles.sectionTitleModal}>
+                                Contato
+                              </Text>
 
-                {selectedParceiro.des_endereco_web_prc && (
-                  <TouchableOpacity style={styles.contactItem}>
-                    <Icon name="language" size={20} color="#666" />
-                    <Text variant="bodyMedium" style={styles.contactText}>
-                      {selectedParceiro.des_endereco_web_prc}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </Card.Content>
-            </Card>
+                              {selectedParceiro.des_email_responsavel_prc && (
+                                <TouchableOpacity style={styles.contactItem}>
+                                  <Icon name="email" size={20} color="#666" />
+                                  <Text variant="bodyMedium" style={styles.contactText}>
+                                    {selectedParceiro.des_email_responsavel_prc}
+                                  </Text>
+                                </TouchableOpacity>
+                              )}
 
-            {/* Descrição */}
-            {selectedParceiro.des_parceiro_prc && (
-              <Card style={styles.infoCard}>
-                <Card.Content>
-                  <Text variant="titleSmall" style={styles.sectionTitleModal}>
-                    Sobre
-                  </Text>
-                  <Text variant="bodyMedium" style={styles.descriptionText}>
-                    {selectedParceiro.des_parceiro_prc}
-                  </Text>
-                </Card.Content>
-              </Card>
-            )}
+                              {(selectedParceiro.num_celular_prc || selectedParceiro.num_telefone_prc) && (
+                                <TouchableOpacity style={styles.contactItem}>
+                                  <Icon name="phone" size={20} color="#666" />
+                                  <Text variant="bodyMedium" style={styles.contactText}>
+                                    {selectedParceiro.num_celular_prc || selectedParceiro.num_telefone_prc}
+                                  </Text>
+                                </TouchableOpacity>
+                              )}
 
-            {/* Informações Adicionais */}
-            {/* <Card style={styles.infoCard}>
+                              {selectedParceiro.des_endereco_web_prc && (
+                                <TouchableOpacity style={styles.contactItem}>
+                                  <Icon name="language" size={20} color="#666" />
+                                  <Text variant="bodyMedium" style={styles.contactText}>
+                                    {selectedParceiro.des_endereco_web_prc}
+                                  </Text>
+                                </TouchableOpacity>
+                              )}
+                            </Card.Content>
+                          </Card>
+
+                          {/* Descrição */}
+                          {selectedParceiro.des_parceiro_prc && (
+                            <Card style={styles.infoCard}>
+                              <Card.Content>
+                                <Text variant="titleSmall" style={styles.sectionTitleModal}>
+                                  Sobre
+                                </Text>
+                                <Text variant="bodyMedium" style={styles.descriptionText}>
+                                  {selectedParceiro.des_parceiro_prc}
+                                </Text>
+                              </Card.Content>
+                            </Card>
+                          )}
+
+                          {/* Informações Adicionais */}
+                          {/* <Card style={styles.infoCard}>
               <Card.Content>
                 <Text variant="titleSmall" style={styles.sectionTitleModal}>
                   Informações Adicionais
@@ -1484,21 +1654,16 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
               </Card.Content>
             </Card> */}
 
-            {/* Botão de Fechar */}
-            <Button 
-              mode="outlined" 
-              onPress={() => setModalVisible(false)} 
-              style={styles.closeButton}
-              labelStyle={styles.closeButtonLabel}
-            >
-              Fechar
-            </Button>
-          </ScrollView>
-        </>
-      );
-    })()}
-  </View>
-</Modal>
+                          {/* Botão de Fechar */}
+                          <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.closeButton} labelStyle={styles.closeButtonLabel}>
+                            Fechar
+                          </Button>
+                        </ScrollView>
+                      </>
+                    );
+                  })()}
+              </View>
+            </Modal>
           </ScrollView>
         </View>
       )}
@@ -1557,17 +1722,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between', // Para alinhar o título/ícone à esquerda e a seta à direita
     marginBottom: 8,
-},
-sectionTitleAndIcon: {
+  },
+  sectionTitleAndIcon: {
     flexDirection: 'row',
     alignItems: 'center',
-},
-sectionIcon: {
+  },
+  sectionIcon: {
     marginRight: 8,
-},
-actionIcon: { // Estilo para a seta
+  },
+  actionIcon: {
+    // Estilo para a seta
     marginLeft: 8, // Pode ajustar o espaçamento se necessário
-},
+  },
   whiteSection: {
     flex: 1,
     backgroundColor: '#f7f7f7',
@@ -1584,7 +1750,7 @@ actionIcon: { // Estilo para a seta
     marginTop: 15,
     marginBottom: 15,
   },
-  
+
   sectionTitle: {
     fontWeight: '700',
     fontSize: 18,
@@ -1621,7 +1787,7 @@ actionIcon: { // Estilo para a seta
     alignItems: 'center',
     marginTop: 8,
   },
-   closeButton: {
+  closeButton: {
     marginTop: 16,
     marginBottom: 20,
     borderColor: '#A497FB',
@@ -1673,6 +1839,15 @@ actionIcon: { // Estilo para a seta
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
+  },
+  waitingCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#A497FB',
+  },
+  waitingBadge: {
+    fontSize: 10,
+    paddingHorizontal: 12,
+    paddingVertical: -2,
   },
   termsFooter: {
     padding: 20,
@@ -2050,34 +2225,34 @@ actionIcon: { // Estilo para a seta
     gap: 0,
     paddingBottom: 0,
   },
- credenciadoCard: {
+  credenciadoCard: {
     borderRadius: 16,
     marginBottom: 12,
-
-},
-credenciadoGradient: {
+  },
+  credenciadoGradient: {
     borderRadius: 16,
     paddingTop: 10,
     paddingBottom: 5,
-        paddingLeft: 5,
+    paddingLeft: 5,
 
-height: Platform.OS === 'ios' ? 110 : 90,
+    height: Platform.OS === 'ios' ? 110 : 90,
     width: '100%',
     // Sem propriedades de sombra aqui
-},
+  },
 
-credenciadoContent: {
+  credenciadoContent: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 5, // Como você especificou
-},
-credenciadoImage: {
+  },
+  credenciadoImage: {
     width: 60, // Ajustei o tamanho da imagem para caber melhor
     height: 60,
     borderRadius: 12,
     marginRight: 10,
-},
-  credenciadoBadge: { // Este é o badge que vai no topo do card
+  },
+  credenciadoBadge: {
+    // Este é o badge que vai no topo do card
     position: 'absolute',
     top: 12,
     right: 22,
@@ -2089,13 +2264,13 @@ credenciadoImage: {
     borderRadius: 12,
     gap: 4,
     zIndex: 1, // Garante que o badge fique por cima
-},
-credenciadoBadgeText: {
+  },
+  credenciadoBadgeText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
-},
-  
+  },
+
   credenciadoInfo: {
     flex: 1,
   },
@@ -2104,17 +2279,17 @@ credenciadoBadgeText: {
     color: '#2d3748',
     marginBottom: 4, // Ajustei a margem
     fontSize: 16,
-},
-credenciadoLocation: {
+  },
+  credenciadoLocation: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginBottom: 4, // Ajustei a margem
-},
-credenciadoLocationText: {
+  },
+  credenciadoLocationText: {
     color: '#666',
     fontSize: 14,
-},
+  },
   activeIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2131,7 +2306,6 @@ credenciadoLocationText: {
     color: '#A497FB',
     fontWeight: '500',
   },
-
 
   // Estilos para estados vazios
   emptyStateCard: {

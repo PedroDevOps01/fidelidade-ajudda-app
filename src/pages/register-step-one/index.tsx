@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { Button, ProgressBar, TextInput, useTheme } from 'react-native-paper';
 import { DatePickerInput } from 'react-native-paper-dates';
 import { usePessoaCreate } from '../../context/create-pessoa-context';
@@ -101,17 +101,9 @@ const RegisterStepOne = () => {
     console.log('errors', errors);
   };
 
-  // Manage status bar to avoid conflict with date picker
-  useEffect(() => {
-    StatusBar.setBarStyle('dark-content'); // Adjust style as needed
-    return () => {
-      StatusBar.setBarStyle('default'); // Restore default style on unmount
-    };
-  }, []);
-
+ 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <StatusBar barStyle="dark-content" /> {/* Set initial status bar style */}
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}

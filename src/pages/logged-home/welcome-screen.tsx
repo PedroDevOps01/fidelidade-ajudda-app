@@ -7,7 +7,6 @@ import {
   Animated,
   Easing,
   SafeAreaView,
-  StatusBar,
 } from 'react-native';
 import { Text, Button, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -85,7 +84,6 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <StatusBar barStyle="light-content" />
       <View style={styles.overlay} />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>

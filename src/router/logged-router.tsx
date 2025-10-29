@@ -53,19 +53,19 @@ const MainTabs = () => {
               iconName = 'home';
               break;
             case 'user-data':
-              iconName = 'account';
+              iconName = 'account-cog';
               break;
             case 'user-mdv':
-              iconName = 'currency-usd';
+              iconName = 'account-cash';
               break;
             case 'Shopping':
-              iconName = 'shopping';
+              iconName = 'cart';
               break;
             case 'user-schedules':
               iconName = 'calendar';
               break;
             case 'user-personal-carteirinha-screen':
-              iconName = 'card-account-details'; // ícone da carteirinha
+              iconName = 'card-account-details-star';
               break;
             default:
               iconName = 'circle';
@@ -112,15 +112,19 @@ const MainTabs = () => {
         }}
       />
       <Tab.Screen
-        name="user-data"
-        component={ProfileStackNavigator}
+        name="user-mdv"
+        component={MdvStackNavigator}
         options={{
-          tabBarLabel: 'Perfil',
+          tabBarLabel: 'Indique',
           headerShown: false,
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: colors.primaryContainer },
+          headerTintColor: colors.onPrimaryContainer,
           headerShadowVisible: true,
-          title: 'Meus Dados',
+          title: 'Minhas Vendas',
         }}
       />
+      
       <Tab.Screen
         name="user-personal-carteirinha-screen"
         component={UserPersonalCarteirinhaScreen}
@@ -132,18 +136,16 @@ const MainTabs = () => {
         }}
       />
       <Tab.Screen
-        name="user-mdv"
-        component={MdvStackNavigator}
+        name="user-data"
+        component={ProfileStackNavigator}
         options={{
-          tabBarLabel: 'Vendas',
+          tabBarLabel: 'Perfil',
           headerShown: false,
-          headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.primaryContainer },
-          headerTintColor: colors.onPrimaryContainer,
           headerShadowVisible: true,
-          title: 'Minhas Vendas',
+          title: 'Meus Dados',
         }}
       />
+      
     </Tab.Navigator>
   );
 };

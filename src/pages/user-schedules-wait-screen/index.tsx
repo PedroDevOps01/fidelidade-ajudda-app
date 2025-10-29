@@ -1,7 +1,7 @@
 import { Button, IconButton, Portal, Text, useTheme, Modal, FAB } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { useAuth } from '../../context/AuthContext';
-import { FlatList, RefreshControl, StyleSheet, View, TouchableOpacity, Animated, Easing } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View, TouchableOpacity, Animated } from 'react-native';
 import React, { useEffect, useState, useCallback } from 'react';
 import LoadingFull from '../../components/loading-full';
 import { api } from '../../network/api';
@@ -11,8 +11,20 @@ import UserScheduleCard from '../user-schedules-screen/user-schedule-card';
 import ScheduleDataModal from '../user-schedules-screen/schedule-data-modal';
 import CustomToast from '../../components/custom-toast';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { useFocusEffect } from '@react-navigation/native';
 
-const UserSchedulesHistoryScreen = ({ navigation }: { navigation: any }) => {
+interface UserSchedule {
+  agenda_exames_id: string;
+  nome_procedimento: string | string[];
+  nome_profissional?: string;
+  data: string;
+  fachada_profissional?: string;
+  inicio: string;
+  situacao?: string;
+  nome_unidade?: string;
+}
+
+const UserSchedulesWaitScreen = ({ navigation }: { navigation: any }) => {
   const { colors } = useTheme();
   const { dadosUsuarioData } = useDadosUsuario();
   const { authData } = useAuth();
@@ -28,40 +40,15 @@ const UserSchedulesHistoryScreen = ({ navigation }: { navigation: any }) => {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [currentDateField, setCurrentDateField] = useState<'start' | 'end' | null>(null);
 
-  // Animação do botão de filtro
-  const rotateAnim = new Animated.Value(0);
-
-  useEffect(() => {
-    Animated.timing(rotateAnim, {
-      toValue: isFilterModalVisible ? 1 : 0,
-      duration: 300,
-      easing: Easing.ease,
-      useNativeDriver: true,
-    }).start();
-  }, [isFilterModalVisible]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-
-  // Animação da lista de agendamentos
+  // Animação da lista
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(20));
 
   useEffect(() => {
     if (!loading) {
       Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: true,
-        }),
+        Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
       ]).start();
     } else {
       fadeAnim.setValue(0);
@@ -69,77 +56,76 @@ const UserSchedulesHistoryScreen = ({ navigation }: { navigation: any }) => {
     }
   }, [filteredSchedules, loading]);
 
-  const fetchSchedules = useCallback(async () => {
-  setLoading(true);
+  // Busca agendamentos EM ESPERA
+  const fetchWaitingSchedules = useCallback(async () => {
+    setLoading(true);
+    const token = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
+    const cod_paciente = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
 
-  const token = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
-  const cod_paciente = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
+    if (!token || !authData.access_token || !cod_paciente) {
+      CustomToast('Dados do paciente não encontrados', colors, 'error');
+      setLoading(false);
+      return;
+    }
 
-  if (!token || !authData.access_token || !cod_paciente) {
-    CustomToast('Dados do paciente não encontrados', colors, 'error');
-    setLoading(false);
-    return;
-  }
+    try {
+      const response = await api.get(
+        `/integracao/listHistoricoAgendamentos?token_paciente=${token}&cod_paciente=${cod_paciente}`,
+        generateRequestHeader(authData.access_token)
+      );
 
-  try {
-    const response = await api.get(
-      `/integracao/listHistoricoAgendamentos?token_paciente=${token}&cod_paciente=${cod_paciente}`,
-      generateRequestHeader(authData.access_token)
-    );
+      const data: UserSchedule[] = Array.isArray(response.data)
+        ? response.data
+            .filter(item => item?.situacao?.trim().toUpperCase() === 'ESPERA')
+            .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+        : [];
 
-    const data: UserSchedule[] = Array.isArray(response.data) ? response.data : [];
+      setUserSchedules(data);
+      setFilteredSchedules(data);
+    } catch (error: any) {
+      console.error('Erro ao carregar agendamentos em espera:', error);
+      CustomToast('Erro ao carregar agendamentos em espera', colors, 'error');
+      setUserSchedules([]);
+      setFilteredSchedules([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [dadosUsuarioData, authData.access_token, colors]);
 
-    // Filtra apenas os agendamentos FINALIZADOS
-    const finishedSchedules = data
-      .filter(item => item?.situacao?.trim().toUpperCase() === 'FINALIZADO')
-      .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
-
-    setUserSchedules(finishedSchedules);
-    setFilteredSchedules(finishedSchedules);
-  } catch (error: any) {
-    console.error('Erro ao carregar agendamentos finalizados:', error);
-    CustomToast('Erro ao carregar agendamentos finalizados', colors, 'error');
-    setUserSchedules([]);
-    setFilteredSchedules([]);
-  } finally {
-    setLoading(false);
-  }
-}, [dadosUsuarioData, authData.access_token, colors]);
-
-  useEffect(() => {
-    fetchSchedules();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchWaitingSchedules();
+    }, [fetchWaitingSchedules])
+  );
 
   const applyDateFilter = () => {
     if (!startDate && !endDate) {
       setFilteredSchedules(userSchedules);
+      setIsFilterModalVisible(false);
       return;
     }
 
-    const filtered = userSchedules.filter(schedule => {
-  const scheduleDate = parseISO(schedule.data);
+    const filtered = userSchedules
+      .filter(schedule => {
+        const scheduleDate = parseISO(schedule.data);
+        if (startDate && endDate) {
+          return isWithinInterval(scheduleDate, { start: startOfDay(startDate), end: endOfDay(endDate) });
+        } else if (startDate) {
+          return scheduleDate >= startOfDay(startDate);
+        } else if (endDate) {
+          return scheduleDate <= endOfDay(endDate);
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
-  if (startDate && endDate) {
-    return isWithinInterval(scheduleDate, {
-      start: startOfDay(startDate),
-      end: endOfDay(endDate),
-    });
-  } else if (startDate) {
-    return scheduleDate >= startOfDay(startDate);
-  } else if (endDate) {
-    return scheduleDate <= endOfDay(endDate);
-  }
-
-  return true;
-}).sort((a, b) => parseISO(b.data).getTime() - parseISO(a.data).getTime()); // ordena do mais recente
-
-setFilteredSchedules(filtered);
-setIsFilterModalVisible(false);
+    setFilteredSchedules(filtered);
+    setIsFilterModalVisible(false);
   };
 
   const clearFilters = () => {
     setStartDate(null);
-    setEndDate(null);
+    setEndDate (null);
     setFilteredSchedules(userSchedules);
     setIsFilterModalVisible(false);
   };
@@ -159,9 +145,12 @@ setIsFilterModalVisible(false);
     <View style={[styles.containerErrorComponent, { backgroundColor: colors.background }]}>
       <IconButton icon="calendar-remove-outline" size={64} iconColor={colors.primary} style={styles.icon} />
       <Text variant="headlineMedium" style={styles.text}>
-        {startDate || endDate ? 'Nenhum agendamento encontrado no período' : 'Você não possui Histórico.'}
+        {startDate || endDate
+          ? 'Nenhum agendamento em espera no período'
+          : 'Você não possui agendamentos em espera.'}
       </Text>
-      <Button onPress={fetchSchedules}>Recarregar</Button>
+           <Button onPress={fetchWaitingSchedules}>Recarregar</Button>
+     
     </View>
   );
 
@@ -173,13 +162,12 @@ setIsFilterModalVisible(false);
   return (
     <View style={{ flex: 1, backgroundColor: '#f7f7f7' }}>
       {loading ? (
-        <LoadingFull />
+        <LoadingFull title="Carregando sala de espera..." />
       ) : (
         <View style={{ flex: 1 }}>
           {filteredSchedules.length > 0 ? (
             <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
               <FlatList
-                style={{ width: '100%' }}
                 data={filteredSchedules}
                 renderItem={({ item, index }) => (
                   <UserScheduleCard
@@ -188,11 +176,12 @@ setIsFilterModalVisible(false);
                     onPress={showModal}
                     showCheckinButton={false}
                     setGlobalLoading={setLoading}
+                    status="ESPERA"
                   />
                 )}
-                refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchSchedules} />}
-                removeClippedSubviews={false}
+                refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchWaitingSchedules} />}
                 contentContainerStyle={styles.listContent}
+                keyExtractor={(item) => item.agenda_exames_id}
               />
             </Animated.View>
           ) : (
@@ -219,14 +208,14 @@ setIsFilterModalVisible(false);
           contentContainerStyle={[styles.filterModal, { backgroundColor: colors.surface }]}
         >
           <View style={styles.filterModalHeader}>
-            <Text variant="titleMedium" style={[styles.filterModalTitle, { color: colors.onSecondary }]}>
+            <Text variant="titleMedium" style={[styles.filterModalTitle, { color: '#fff' }]}>
               Filtrar por Período
             </Text>
             <IconButton
               icon="close"
               size={20}
               onPress={() => setIsFilterModalVisible(false)}
-              iconColor={colors.onSecondary}
+              iconColor="#fff"
             />
           </View>
 
@@ -272,7 +261,6 @@ setIsFilterModalVisible(false);
           </View>
         </Modal>
 
-        {/* Date Picker Modal */}
         <DatePickerModal
           locale="pt-BR"
           mode="single"
@@ -286,8 +274,8 @@ setIsFilterModalVisible(false);
         />
       </Portal>
 
-      {/* Botão Flutuante */}
-      <FAB
+      {/* FAB sem animação de rotação */}
+      {/* <FAB
         icon="filter-variant"
         style={{
           position: 'absolute',
@@ -296,26 +284,70 @@ setIsFilterModalVisible(false);
           backgroundColor: colors.primary,
         }}
         onPress={() => setIsFilterModalVisible(true)}
-      />
+      /> */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   listContent: { paddingBottom: 16 },
-  containerErrorComponent: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
+  containerErrorComponent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
   icon: { marginBottom: 16 },
-  text: { textAlign: 'center', paddingHorizontal: 16, marginBottom: 16 },
-  filterModal: { margin: 20, borderRadius: 16, padding: 0, overflow: 'hidden' },
-  filterModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, backgroundColor: '#A497FB', borderBottomColor: '#f0f0f0' },
-  filterModalTitle: { fontWeight: '600', color: 'white' },
+  text: {
+    textAlign: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  filterModal: {
+    margin: 20,
+    borderRadius: 16,
+    padding: 0,
+    overflow: 'hidden',
+  },
+  filterModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#A497FB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  filterModalTitle: {
+    fontWeight: '600',
+    color: '#fff',
+  },
   dateInputsContainer: { padding: 16 },
   dateInput: { marginBottom: 16 },
   dateLabel: { marginBottom: 8, fontWeight: '500' },
-  dateButton: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, padding: 8, borderWidth: 1, borderColor: '#e0e0e0' },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
   dateButtonText: { marginLeft: 8, fontSize: 16 },
-  filterActions: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
-  filterButtonAction: { flex: 1, marginHorizontal: 6, borderRadius: 8 },
+  filterActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  filterButtonAction: {
+    flex: 1,
+    marginHorizontal: 6,
+    borderRadius: 8,
+  },
 });
 
-export default UserSchedulesHistoryScreen;
+export default UserSchedulesWaitScreen;

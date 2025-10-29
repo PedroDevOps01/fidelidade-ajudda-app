@@ -18,6 +18,8 @@ type UserSchedule = {
   bairro_unidade: string;
   cidade_unidade: string;
   estado: string;
+    situacao?: string;
+
   longitude_unidade: string;
   latitude_unidade: string;
   fachada_unidade: string;

@@ -1,4 +1,4 @@
-import { Alert, PermissionsAndroid, Platform, StatusBar, View } from "react-native";
+import { Alert, PermissionsAndroid, Platform, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { useDadosUsuario } from "../../context/pessoa-dados-context";
 import { useEffect, useState } from "react";
@@ -101,7 +101,6 @@ export default function UserTelemedMeetScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar backgroundColor={'#141414'} barStyle={"light-content"}/>
       <WebView
         javaScriptEnabled={true}
         domStorageEnabled={true}
