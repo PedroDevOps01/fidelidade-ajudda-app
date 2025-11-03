@@ -3,7 +3,7 @@ import { log } from '../utils/app-utils';
 
 export const api = axios.create({
   //baseURL: 'http://52.20.221.114/backend-apresentacaoh/api',
-   baseURL: 'http://52.20.221.114/fidelidade/api',
+   baseURL: 'https://fidelidadegees.com.br/fidelidade-demonstracao/api',
   //baseURL: 'http://52.20.221.114/backend-dediqteste/api/',
   timeout: 60000,
   headers: {

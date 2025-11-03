@@ -61,6 +61,8 @@ interface Parceiro {
   des_parceiro_prc: string | null;
   num_cred_prc: string | null;
   cred_ativo_prc: '0' | '1' | null;
+  is_nacional_prc?: false | true;
+  is_internacional_prc?: false | true;
 }
 
 interface Termo {
@@ -576,16 +578,16 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
 
   async function fetchWaitingSchedules(): Promise<void> {
     const token = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
-    console.log(token)
+    console.log(token);
     const cod_paciente = dadosUsuarioData.pessoaDados?.id_pessoa_pes;
-        console.log(cod_paciente)
+    console.log(cod_paciente);
 
     if (!token || !authData.access_token) return;
-console.log('oi')
+    console.log('oi');
     setWaitingSchedulesLoading(true);
     try {
       const response = await api.get(`/integracao/listHistoricoAgendamentos?token_paciente=${token}&cod_paciente=${cod_paciente}`, generateRequestHeader(authData.access_token));
-                  console.log(response)
+      console.log(response);
 
       const data = response.data || [];
 
@@ -719,7 +721,10 @@ console.log('oi')
               },
             };
       const response = await api.get('/parceiro/app', headers);
+      console.log(response);
+
       const dataApi = response.data;
+
       if (dataApi && dataApi.response && dataApi.response.data && dataApi.response.data.length > 0) {
         setParceiros(dataApi.response.data);
       } else {
@@ -1156,7 +1161,6 @@ console.log('oi')
               <View style={styles.sectionContainer}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionTitleAndIcon}>
-                    {' '}
                     {/* Agrupando ícone e texto */}
                     <Icon name="monitor-heart" size={22} color={colors.primary} style={styles.sectionIcon} /> {/* Exemplo de ícone para telemedicina */}
                     <Text variant="titleMedium" style={[styles.sectionTitle, { color: colors.primary, marginBottom: 0 }]}>
@@ -1620,7 +1624,32 @@ console.log('oi')
                               </Card.Content>
                             </Card>
                           )}
+                          {selectedParceiro.is_nacional_prc === true || selectedParceiro.is_internacional_prc === true ? (
+                            <Card style={styles.infoCard}>
+                              <Card.Content>
+                                <Text variant="titleSmall" style={styles.sectionTitleModal}>
+                                  Abrangência
+                                </Text>
+                                <Text variant="bodyMedium" style={styles.descriptionText}>
+                                  {(() => {
+                                    const nacional = selectedParceiro.is_nacional_prc === true;
+                                    const internacional = selectedParceiro.is_internacional_prc === true;
 
+                                    if (nacional && internacional) {
+                                      return 'Válido em todo o território nacional e internacional';
+                                    }
+                                    if (nacional) {
+                                      return 'Válido em todo o território nacional';
+                                    }
+                                    if (internacional) {
+                                      return 'Válido internacionalmente';
+                                    }
+                                    return '';
+                                  })()}
+                                </Text>
+                              </Card.Content>
+                            </Card>
+                          ) : null}
                           {/* Informações Adicionais */}
                           {/* <Card style={styles.infoCard}>
               <Card.Content>
