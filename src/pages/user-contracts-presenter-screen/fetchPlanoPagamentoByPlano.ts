@@ -1,4 +1,4 @@
-// fetchPlanoPagamentoByPlanoPadrao.ts
+// fetchPlanoPagamentoByPlano.ts
 import { api } from '../../network/api';
 
 export interface PaymentMethodCortesia {

@@ -50,47 +50,43 @@ export default function UserContractsPaymentMethodRouter() {
   }, [alertErrorMessage]);
 
   async function getPlanoPagamentoData() {
-    try {
-      const response = await api.get(
-        `/plano-pagamento?id_forma_pagamento_ppg=${idFormaPagamento}&is_ativo_ppg=1`,
-        generateRequestHeader(authData.access_token)
-      );
+  try {
+    const response = await api.get(
+      `/plano-pagamento?id_forma_pagamento_ppg=${idFormaPagamento}&is_ativo_ppg=1`,
+      generateRequestHeader(authData.access_token)
+    );
 
-      const { data } = response;
-      log('getPlanoPagamentoData response', data);
-
-      if (!plano) {
-        setAlertErrorMessage('Nenhum plano selecionado!');
-        setLoading(false);
-        return;
-      }
-
-      if (!data?.response?.data?.length) {
-        setAlertErrorMessage('Nenhum plano de pagamento encontrado para a forma de pagamento selecionada!');
-        setLoading(false);
-        return;
-      }
-
-      const planoCorreto = data.response.data.find(
-        (p: any) => plano && p.id_plano_ppg === plano.id_plano_pla
-      );
-      if (!planoCorreto) {
-        setAlertErrorMessage('Plano de pagamento não encontrado para este plano!');
-        console.log('Plano de pagamento não encontrado para este plano!');
-        setLoading(false);
-        return;
-      }
-
-      setPlanoPagamento(planoCorreto); // Save selected payment plan to context
-      createContrato(planoCorreto);
-      setLoadingMessage('Obtendo informações');
-    } catch (err: any) {
-      console.log('getPlanoPagamentoData error', err.response?.data || err);
-      setAlertErrorMessage('Erro ao carregar dados do plano de pagamento. Tente novamente mais tarde.');
+    const { data } = response;
+    if (!data?.response?.data?.length) {
+      setAlertErrorMessage('Nenhuma forma de pagamento encontrada!');
       setLoading(false);
+      return;
     }
-  }
 
+    // FILTRAR PELO TIPO (ANUAL/MENSAL)
+    const formas = data.response.data;
+    const formaEscolhida = formas.find((p: any) => {
+      const isAnualEscolhido = isAnual;
+      const isAnualForma = (p.vlr_vendedor_ppg ?? 0) > 0 && (p.vlr_diretor_ppg ?? 0) > 0 && (p.vlr_gerente_ppg ?? 0) > 0;
+      const isMensalForma = (p.vlr_vendedor_ppg ?? 0) === 0 && (p.vlr_diretor_ppg ?? 0) === 0 && (p.vlr_gerente_ppg ?? 0) === 0;
+
+      return isAnualEscolhido ? isAnualForma : isMensalForma;
+    });
+
+    if (!formaEscolhida) {
+      setAlertErrorMessage(`Forma de pagamento ${isAnual ? 'anual' : 'mensal'} não encontrada.`);
+      setLoading(false);
+      return;
+    }
+
+
+    setPlanoPagamento(formaEscolhida);
+    createContrato(formaEscolhida);
+  } catch (err: any) {
+    setAlertErrorMessage('Erro ao carregar plano de pagamento.');
+    setLoading(false);
+  }
+}
   async function createContrato(planoPagamento: PlanoPagamento) {
     console.log('2 - createContrato');
     try {

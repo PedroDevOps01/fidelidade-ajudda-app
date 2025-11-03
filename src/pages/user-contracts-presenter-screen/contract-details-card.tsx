@@ -32,6 +32,9 @@ interface Plano {
     num_parcelas_ppg: number;
     vlr_parcela_ppg: number;
     is_padrao_ppg: boolean | number;
+    vlr_vendedor_ppg?: number;
+    vlr_diretor_ppg?: number;
+    vlr_gerente_ppg?: number;
   }[];
   isLoadingFormasPagamento?: boolean;
 }
@@ -45,14 +48,14 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
   const { colors } = useTheme();
   const isPopular = contract.id_plano_pla === 72;
   const scaleValue = useRef(new Animated.Value(1)).current;
-  const [formasPagamento, setFormasPagamento] = useState<PaymentMethod[]>([]);
+  const [formasPagamento, setFormasPagamento] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const { dadosUsuarioData } = useDadosUsuario();
   const { authData } = useAuth();
   const [selectingPlan, setSelectingPlan] = useState(false);
   const { setIsAnual, setPlano } = useAccquirePlan();
+  
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
       toValue: 0.98,
@@ -70,30 +73,25 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
   };
 
   useEffect(() => {
-    let isMounted = true;
+  let isMounted = true;
 
-    async function loadFormasPagamento() {
-      try {
-        setLoading(true);
-        const data = await fetchPlanoPagamentoByPlanoPadrao(contract.id_plano_pla);
-        if (isMounted) {
-          setFormasPagamento(data);
-        }
-      } catch (err) {
-        console.error('Erro ao buscar formas de pagamento', err);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+  async function loadFormasPagamento() {
+    try {
+      setLoading(true);
+      const formas = await fetchPlanoPagamentoByPlanoPadrao(contract.id_plano_pla, authData.access_token);
+      if (isMounted) {
+        setFormasPagamento(formas);
       }
+    } catch (err) {
+      console.error('Erro ao carregar formas de pagamento', err);
+    } finally {
+      if (isMounted) setLoading(false);
     }
+  }
 
-    loadFormasPagamento();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [contract.id_plano_pla]);
+  loadFormasPagamento();
+  return () => { isMounted = false; };
+}, [contract.id_plano_pla, authData.access_token]);
 
   const handlePlanSelection = async () => {
     if (dadosUsuarioData?.pessoaDados?.is_tipo_contratante_pda) {
@@ -158,7 +156,21 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
   };
 
   const CardContainer = View;
+const formaAnual = formasPagamento.find(f =>
+    (f.vlr_vendedor_ppg ?? 0) > 0 &&
+    (f.vlr_diretor_ppg ?? 0) > 0 &&
+    (f.vlr_gerente_ppg ?? 0) > 0
+  );
 
+  const formaMensal = formasPagamento.find(f =>
+    (f.vlr_vendedor_ppg ?? 0) === 0 &&
+    (f.vlr_diretor_ppg ?? 0) === 0 &&
+    (f.vlr_gerente_ppg ?? 0) === 0
+  );
+
+
+  const valorAnual = formaAnual ? formaAnual.num_parcelas_ppg * formaAnual.vlr_parcela_ppg : 0;
+  const valorMensal = formaMensal ? `${formaMensal.num_parcelas_ppg}x de ${maskBrazilianCurrency(formaMensal.vlr_parcela_ppg)}` : null;
   return (
     <Animated.View 
       style={[
@@ -199,7 +211,7 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
             </Text>
           </View>
 
-          <View style={styles.paymentMethodsContainer}>
+         <View style={styles.paymentMethodsContainer}>
             {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color={isPopular ? '#FFD700' : colors.primary} />
@@ -209,70 +221,29 @@ export default function ContractDetailCard({ contract, onPress }: ContractDetail
               </View>
             ) : (
               <View style={styles.paymentMethods}>
-                {formasPagamento && formasPagamento.length > 0 ? (
-                  <>
-                    {/* FORMAS DE PAGAMENTO - cada uma com seu VALOR ANUAL */}
-                    {formasPagamento.map((forma) => {
-                      const totalAnual = Number(forma.num_parcelas_ppg) * Number(forma.vlr_parcela_ppg);
-                      return (
-                        <View 
-                          key={forma.value} 
-                          style={[
-                            styles.paymentMethodItem,
-                            forma.is_padrao_ppg ? styles.firstPaymentMethod : undefined,
-                          ]}
-                        >
-                          <Icon
-                            name="credit-card"
-                            size={14}
-                            color={isPopular ? '#FFD700' : colors.primary}
-                            style={styles.paymentMethodIcon}
-                          />
-                          <View style={{ flex: 1 }}>
-                            {/* Linha principal: parcelas x valor */}
-                            <Text
-                              style={[
-                                styles.paymentMethodText,
-                                { color: isPopular ? '#FFF' : '#4A5568' },
-                              ]}
-                            >
-                              {forma.label}: {forma.num_parcelas_ppg}{' '}
-                              {forma.num_parcelas_ppg > 1 ? 'parcelas' : 'parcela'} de{' '}
-                              {maskBrazilianCurrency(forma.vlr_parcela_ppg)}
-                            </Text>
-
-                            {/* Sub-linha: Valor anual desse método */}
-                            <View style={styles.anualRow}>
-                              <Icon
-                                name="calendar-today"
-                                size={13}
-                                color={isPopular ? '#FFD700' : '#A497FB'}
-                                style={{ marginRight: 6 }}
-                              />
-                              <Text
-                                style={[
-                                  styles.anualLabel,
-                                  { color: isPopular ? '#FFD700' : '#6B7280' },
-                                ]}
-                              >
-                                Valor anual:{' '}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.anualValue,
-                                  { color: isPopular ? '#FFD700' : '#4F46E5' },
-                                ]}
-                              >
-                                {maskBrazilianCurrency(totalAnual)}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </>
+                {formaAnual && formaMensal ? (
+                  <View style={styles.paymentMethodItem}>
+                    <Icon name="schedule" size={16} color={isPopular ? '#FFD700' : '#A497FB'} style={styles.paymentMethodIcon} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.paymentMethodText, { color: isPopular ? '#FFF' : '#4A5568' }]}>
+                        {formaAnual.des_nome_fmp}
+                      </Text>
+                      <View style={styles.anualRow}>
+                        <Text style={[styles.anualLabel, { color: isPopular ? '#FFD700' : '#6B7280' }]}>
+                          Anual: R$ {maskBrazilianCurrency(valorAnual)}
+                        </Text>
+                      </View>
+                      <View style={styles.anualRow}>
+                        <Text style={[styles.anualLabel, { color: isPopular ? '#FFF' : '#718096' }]}>
+                          Mensal: {valorMensal}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
                 ) : (
-                  <View style={styles.noPaymentContainer} />
+                  <View style={styles.noPaymentContainer}>
+                    <Text style={{ color: isPopular ? '#FFF' : '#718096' }}>Opções personalizadas</Text>
+                  </View>
                 )}
               </View>
             )}

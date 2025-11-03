@@ -8,44 +8,50 @@ import { generateRequestHeader } from '../../utils/app-utils';
 import LoadingFull from '../../components/loading-full';
 import { navigate } from '../../router/navigationRef';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import { fetchPlanoPagamentoByPlanoPadrao } from '../user-contracts-presenter-screen/fetchPlanoPagamentoByPlanoPadrao';
+import { PaymentOption } from '../../types/PaymentOption'; // ADICIONE
 export default function UserContractsPaymentMethod() {
-  const { authData } = useAuth();
+const { authData } = useAuth();
   const { colors } = useTheme();
-  const { setIdFormaPagamento, idFormaPagamento } = useAccquirePlan();
+  const { setIdFormaPagamento } = useAccquirePlan();
+  const { plano, isAnual } = useAccquirePlan();
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
-
+  const [formasPagamento, setFormasPagamento] = useState<PaymentOption[]>([]); // CORRETO  
+  
   async function getPaymentMethods() {
+    if (!plano?.id_plano_pla || isAnual === undefined) {
+      Alert.alert('Erro', 'Plano ou tipo de pagamento não selecionado.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const request = await api.get('/formapagamento?is_ativo_fmp=1', generateRequestHeader(authData.access_token));
-      const { data } = request;
-    
-      if (request.status === 200) {
-        const trueData: FormaPagamento[] = data.response.data;
-          console.log(trueData);
-        if (trueData) {
-          const filtered = trueData.filter(e => e.id_forma_pagamento_fmp.toString().length > 4);
-          console.log(filtered)
-          setFormasPagamento(filtered);
-        
-          console.log(data.response.data.length);
-        }
-      }
+      const formas = await fetchPlanoPagamentoByPlanoPadrao(plano.id_plano_pla, authData.access_token);
+
+      const formasFiltradas = formas.filter(f => {
+  const isAnualEscolhido = isAnual;
+  const vendedor = f.vlr_vendedor_ppg ?? 0;
+  const diretor = f.vlr_diretor_ppg ?? 0;
+  const gerente = f.vlr_gerente_ppg ?? 0;
+
+  const isAnualForma = vendedor > 0 && diretor > 0 && gerente > 0;
+  const isMensalForma = vendedor === 0 && diretor === 0 && gerente === 0;
+
+  return isAnualEscolhido ? isAnualForma : isMensalForma;
+});
+      console.log('Formas filtradas:', formasFiltradas);
+      setFormasPagamento(formasFiltradas);
     } catch (err) {
-      Alert.alert('Erro ao carregar as formas de pagamento. Tente novamente mais tarde.');
+      console.error(err);
+      Alert.alert('Erro', 'Não foi possível carregar as formas de pagamento.');
     } finally {
       setLoading(false);
     }
   }
-
   useEffect(() => {
-    (async function () {
-      await getPaymentMethods();
-    })();
-  }, []);
+    getPaymentMethods();
+  }, [plano?.id_plano_pla, isAnual]);
 
   const getPaymentIcon = (id: string) => {
     switch (id) {
