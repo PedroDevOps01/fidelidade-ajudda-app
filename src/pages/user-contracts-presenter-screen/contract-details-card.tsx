@@ -187,7 +187,7 @@ const formaAnual = formasPagamento.find(f =>
         disabled={selectingPlan}
       >
         <CardContainer
-          style={[styles.card, isPopular && styles.popularCard, { backgroundColor: isPopular ? '#A497FB' : '#FFF' }]}
+          style={[styles.card, isPopular && styles.popularCard, { backgroundColor: isPopular ? '#44005F' : '#FFF' }]}
         >
           <View style={styles.cardHeader}>
             <View style={styles.planNameContainer}>
@@ -223,7 +223,7 @@ const formaAnual = formasPagamento.find(f =>
               <View style={styles.paymentMethods}>
                 {formaAnual && formaMensal ? (
                   <View style={styles.paymentMethodItem}>
-                    <Icon name="schedule" size={16} color={isPopular ? '#FFD700' : '#A497FB'} style={styles.paymentMethodIcon} />
+                    <Icon name="schedule" size={16} color={isPopular ? '#FFD700' : '#44005F'} style={styles.paymentMethodIcon} />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.paymentMethodText, { color: isPopular ? '#FFF' : '#4A5568' }]}>
                         {formaAnual.des_nome_fmp}
@@ -261,7 +261,7 @@ const formaAnual = formasPagamento.find(f =>
                   <Icon
                     name="check-circle"
                     size={16}
-                    color={isPopular ? '#FFD700' : '#A497FB'}
+                    color={isPopular ? '#FFD700' : '#44005F'}
                     style={styles.featureIcon}
                   />
                   <Text style={[styles.featureText, { color: isPopular ? '#FFF' : '#2D3748' }]}>
@@ -286,7 +286,7 @@ const formaAnual = formasPagamento.find(f =>
 
           <View style={[styles.selectButton, isPopular && styles.popularSelectButton]}>
             {selectingPlan ? (
-              <ActivityIndicator size="small" color={isPopular ? '#A497FB' : '#FFF'} />
+              <ActivityIndicator size="small" color={isPopular ? '#44005F' : '#FFF'} />
             ) : (
               <>
                 <Text style={[styles.selectButtonText, isPopular && styles.popularSelectButtonText]}>
@@ -334,9 +334,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   popularTouchable: {
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
     borderColor: 'transparent',
-    shadowColor: '#A497FB',
+    shadowColor: '#44005F',
     shadowOpacity: 0.3,
   },
   card: {
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   popularCard: {
     minHeight: 120,
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   firstPaymentMethod: {
     backgroundColor: 'rgba(175, 145, 249, 0.1)',
     borderLeftWidth: 3,
-    borderLeftColor: '#A497FB',
+    borderLeftColor: '#44005F',
   },
   paymentMethodIcon: {
     marginRight: 8,
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
   },
   popularSelectButton: {
     backgroundColor: '#FFF',
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   popularSelectButtonText: {
-    color: '#A497FB',
+    color: '#44005F',
   },
   arrowIcon: {
     marginLeft: 8,

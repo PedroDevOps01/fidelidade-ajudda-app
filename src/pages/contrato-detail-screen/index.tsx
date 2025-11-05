@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderWidth: 1.5,
-            borderColor: '#A497FB', // usa a cor principal do tema
+            borderColor: '#44005F', // usa a cor principal do tema
 
     borderRadius: 12,
     marginBottom: 8,
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     maxHeight: 200,
     borderWidth: 1.5,
-        borderColor: '#A497FB', // usa a cor principal do tema
+        borderColor: '#44005F', // usa a cor principal do tema
 
     borderRadius: 12,
     marginTop: 4,
@@ -768,7 +768,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     borderWidth: 1.5,
-            borderColor: '#A497FB', // usa a cor principal do tema
+            borderColor: '#44005F', // usa a cor principal do tema
 
   },
 

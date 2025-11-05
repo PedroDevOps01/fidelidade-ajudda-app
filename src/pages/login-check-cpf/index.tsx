@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   borderRadius: 24,           // Deixa o botão circular (ajuste conforme o padding)
   padding: 4,                // Espaço interno para dar espaço ao ícone
   borderWidth: 2,             // Espessura da borda (opcional)
-  borderColor: '#A497FB',        // Cor da borda (opcional)
+  borderColor: '#44005F',        // Cor da borda (opcional)
 },
   logoContainer: {
     marginBottom: Platform.OS === 'ios' && width >= 768 ? 48 : 32,

@@ -57,7 +57,7 @@ const handleLogout = () => {
       icon: 'package-variant',
       title: 'Catálogo',
       description: 'Acesse produtos e serviços',
-      color: '#A497FB',
+      color: '#44005F',
     },
     {
       id: 2,
@@ -103,7 +103,7 @@ useEffect(() => {
         >
           {/* Header com Gradient */}
           <LinearGradient
-            colors={['#A497FB', '#F1591E']}
+            colors={['#44005F', '#43018E']}
             style={[
               styles.headerGradient,
               isSmallScreen && styles.headerGradientSmall
@@ -120,7 +120,7 @@ useEffect(() => {
                   size={isSmallScreen ? 60 : isTablet ? 100 : 80} 
                   icon="account-tie" 
                   style={styles.avatar}
-                  color="#A497FB"
+                  color="#44005F"
                 />
                 <View style={styles.avatarBadge} />
               </View>
@@ -540,10 +540,10 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     borderRadius: 12,
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
     ...Platform.select({
       ios: {
-        shadowColor: '#A497FB',
+        shadowColor: '#44005F',
         shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#A497FB',
+    color: '#44005F',
     marginBottom: 4,
   },
   statNumberSmall: {

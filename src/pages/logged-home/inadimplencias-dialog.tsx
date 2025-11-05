@@ -78,7 +78,7 @@ const InadimplenciaDialog = ({ errors, visible, navigation, handlePress }: Inadi
           <IconButton
             icon="information-outline"
             size={20}
-            iconColor="#A497FB"
+            iconColor="#44005F"
             style={styles.warningIcon}
           />
           <Text style={styles.warningText}>
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   },
   parcelValue: {
     fontSize: 14,
-    color: '#A497FB',
+    color: '#44005F',
     fontWeight: '600',
   },
   divider: {
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 16,
     borderLeftWidth: 3,
-    borderLeftColor: '#A497FB',
+    borderLeftColor: '#44005F',
   },
   warningIcon: {
     margin: 0,
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   primaryButton: {
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
   },
   primaryButtonLabel: {
     fontSize: 14,

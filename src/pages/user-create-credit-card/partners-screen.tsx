@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 28, 
     fontWeight: 'bold',   
-    color: '#A497FB',
+    color: '#44005F',
     textAlign: 'center',
     marginBottom: 4,
   },
@@ -577,10 +577,10 @@ height:250,
   },
   
   accreditedBadge: {
-    backgroundColor: '#F1591E',
+    backgroundColor: '#43018E',
   },
   regularBadge: {
-    backgroundColor: '#F1591E',
+    backgroundColor: '#43018E',
   },
   statusText: {
     color: '#fff',
@@ -630,7 +630,7 @@ height:250,
     marginLeft: 4,
   },
   activeHint: {
-    color: '#A497FB',
+    color: '#44005F',
   },
   inactiveHint: {
     color: '#ed8936',
@@ -659,7 +659,7 @@ height:250,
     marginBottom: 8,
   },
   dialogIconSuccess: {
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
   },
   dialogIconPremium: {
     backgroundColor: '#ed8936',
@@ -668,7 +668,7 @@ height:250,
     textAlign: 'center',
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#A497FB',
+    color: '#44005F',
     marginBottom: 8,
   },
   dialogContent: {
@@ -712,7 +712,7 @@ height:250,
     elevation: 4,
   },
   accessButton: {
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
   },
   subscribeButton: {
     backgroundColor: '#ed8936',

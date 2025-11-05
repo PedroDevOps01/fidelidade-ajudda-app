@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   loginButton: {
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
     borderRadius: 25,
     paddingVertical: 12,
     paddingHorizontal: 25,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     marginLeft: 8,
-    color: '#A497FB',
+    color: '#44005F',
     fontSize: 14,
   },
   landscapeWrapper: {
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#A497FB',
+    borderColor: '#44005F',
   },
   gradientBackground: {
     position: 'absolute',
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   cardFooter: {
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
     padding: 12,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,

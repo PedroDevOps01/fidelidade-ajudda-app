@@ -230,8 +230,8 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
         const diffTime = appointmentDate.getTime() - today.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) return { text: 'Hoje', color: '#FF6B6B', icon: 'today' };
-        if (diffDays === 1) return { text: 'Amanhã', color: '#A497FB', icon: 'event-available' };
+        if (diffDays === 0) return { text: 'Hoje', color: '#43018E', icon: 'today' };
+        if (diffDays === 1) return { text: 'Amanhã', color: '#44005F', icon: 'event-available' };
         if (diffDays <= 7) return { text: `Em ${diffDays} dias`, color: '#42A5F5', icon: 'event' };
         return { text: formatDateToDDMMYYYY(appointment.data), color: colors.onSurfaceVariant, icon: 'calendar-month' };
       } else {
@@ -476,7 +476,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
         .map(
           termo => `
           <div style="margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-            <h2 style="color: #A497FB; font-size: 24px; margin-bottom: 15px; font-weight: 600; text-align: center;">
+            <h2 style="color: #44005F; font-size: 24px; margin-bottom: 15px; font-weight: 600; text-align: center;">
               ${termo.des_descricao_tde}
             </h2>
             <div style="font-size: 14px; color: #333; line-height: 1.6;">
@@ -506,7 +506,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             color: #333;
           }
           h2 { 
-            color: #A497FB; 
+            color: #44005F; 
             font-size: 18px; 
             margin-bottom: 15px; 
             font-weight: 600;
@@ -634,11 +634,11 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                 {/* Header com Situação */}
                 <View style={styles.cardHeader}>
                   <View style={styles.statusContainer}>
-                    <Text variant="labelSmall" style={[styles.statusText, { color: '#A497FB' }]}>
+                    <Text variant="labelSmall" style={[styles.statusText, { color: '#44005F' }]}>
                       Em espera
                     </Text>
                   </View>
-                  <Badge style={[styles.waitingBadge, { backgroundColor: '#F1591E' }]}>ESPERA</Badge>
+                  <Badge style={[styles.waitingBadge, { backgroundColor: '#43018E' }]}>ESPERA</Badge>
                 </View>
 
                 {/* Main Content */}
@@ -678,7 +678,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
 
                 {/* Footer */}
                 <View style={[styles.cardFooter, { backgroundColor: `${colors.onSecondary}15`, borderTopWidth: 0 }]}>
-                  <Icon name="schedule" size={16} color="#A497FB" />
+                  <Icon name="schedule" size={16} color="#44005F" />
                   <Text variant="bodySmall" style={[styles.footerText, { color: colors.onSurfaceVariant }]}>
                     Aguarde confirmação da clínica
                   </Text>
@@ -1063,7 +1063,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
       ) : (
         <View style={styles.container}>
           <LinearGradient
-            colors={['#A497FB', '#f15d4d']}
+            colors={['#43018E', '#44005F']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -1179,15 +1179,15 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionTitleContainer}>
-                  <Icon name="verified" size={20} color="#A497FB" />
-                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: '#A497FB' }]}>
+                  <Icon name="verified" size={20} color="#44005F" />
+                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: '#44005F' }]}>
                     Nossos Credenciados
                   </Text>
                 </View>
                 <Button
                   mode="text"
                   compact
-                  labelStyle={[styles.seeAllButton, { color: '#A497FB' }]}
+                  labelStyle={[styles.seeAllButton, { color: '#44005F' }]}
                   onPress={() => navigation.navigate('ParceirosScreen', { partnerType: 'accredited' })}
                   icon="arrow-right">
                   Ver todos
@@ -1196,7 +1196,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
 
               {loading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator animating={true} size="small" color="#A497FB" />
+                  <ActivityIndicator animating={true} size="small" color="#44005F" />
                   <Text style={[styles.loadingText, { color: colors.onSurfaceVariant }]}>Carregando credenciados...</Text>
                 </View>
               ) : parceirosCredenciados.length > 0 ? (
@@ -1231,7 +1231,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                               {item.des_nome_fantasia_prc}
                             </Text>
                             <View style={styles.credenciadoLocation}>
-                              <Icon name="location-on" size={14} color="#A497FB" />
+                              <Icon name="location-on" size={14} color="#44005F" />
                               <Text variant="bodySmall" style={styles.credenciadoLocationText} numberOfLines={1}>
                                 {item.des_municipio_mun}
                               </Text>
@@ -1248,7 +1248,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
 
                           {/* Botão de Ação */}
                           <View style={styles.credenciadoAction}>
-                            <Icon name="chevron-right" size={18} color="#A497FB" />
+                            <Icon name="chevron-right" size={18} color="#44005F" />
                           </View>
                         </View>
                       </LinearGradient>
@@ -1325,18 +1325,18 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionTitleAndIcon}>
-                  <Icon name="house" size={22} color="#A497FB" style={styles.sectionIcon} />
-                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: '#A497FB' }]}>
+                  <Icon name="house" size={22} color="#44005F" style={styles.sectionIcon} />
+                  <Text variant="titleMedium" style={[styles.sectionTitle, { color: '#44005F' }]}>
                     Sala de Espera
                   </Text>
                 </View>
-                <Button mode="text" compact labelStyle={[styles.seeAllButton, { color: '#A497FB' }]} onPress={() => navigate('user-shcdules-wait-screen')} icon="arrow-right">
+                <Button mode="text" compact labelStyle={[styles.seeAllButton, { color: '#44005F' }]} onPress={() => navigate('user-shcdules-wait-screen')} icon="arrow-right">
                   Ver todos
                 </Button>
               </View>
 
               {waitingSchedulesLoading ? (
-                <ActivityIndicator style={{ marginTop: 10 }} color="#A497FB" />
+                <ActivityIndicator style={{ marginTop: 10 }} color="#44005F" />
               ) : lastWaitingSchedule ? (
                 <WaitingRoomCard appointment={lastWaitingSchedule} onPress={() => navigate('user-shcdules-wait-screen')} />
               ) : (
@@ -1347,7 +1347,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                     title: 'Nenhum agendamento em espera',
                     subtitle: 'Seus agendamentos em espera aparecerão aqui',
                     icon: 'house',
-                    color: '#A497FB',
+                    color: '#44005F',
                   }}
                 />
               )}
@@ -1436,7 +1436,7 @@ const LoggedHome = ({ route, navigation }: { route: any; navigation: any }) => {
                               {selectedParceiro.des_nome_fantasia_prc}
                             </Text>
                             <View style={styles.credentialStatus}>
-                              <Icon name="verified" size={16} color="#A497FB" />
+                              <Icon name="verified" size={16} color="#44005F" />
                               <Text style={styles.credentialStatusText}>Parceiro Credenciado</Text>
                             </View>
                           </View>
@@ -1706,7 +1706,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f7f7f7',
   },
   purpleSection: {
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
     height: Platform.select({
       ios: Platform.isPad ? SCREEN_HEIGHT * 0.2 : SCREEN_HEIGHT * 0.35,
       android: Platform.isPad ? SCREEN_HEIGHT * 0.5 : SCREEN_HEIGHT * 0.35,
@@ -1790,7 +1790,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // centraliza verticalmente
     alignItems: 'center', // centraliza horizontalmente
     minHeight: 140, // altura mínima
-    borderColor: '#A497FB', // cor da borda
+    borderColor: '#44005F', // cor da borda
     borderWidth: 1, // largura da borda
     borderRadius: 12, // cantos arredondados (opcional)
     padding: 16, // espaçamento interno
@@ -1819,11 +1819,11 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: 16,
     marginBottom: 20,
-    borderColor: '#A497FB',
+    borderColor: '#44005F',
     borderRadius: 12,
   },
   closeButtonLabel: {
-    color: '#A497FB',
+    color: '#44005F',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -1846,7 +1846,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   termsHeader: {
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
     padding: 25,
     paddingTop: Platform.OS === 'android' ? 40 : 15, // Topo maior no Android
     borderBottomLeftRadius: 15,
@@ -1871,7 +1871,7 @@ const styles = StyleSheet.create({
   },
   waitingCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#A497FB',
+    borderLeftColor: '#44005F',
   },
   waitingBadge: {
     fontSize: 10,
@@ -2023,7 +2023,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   telemedicineButtonText: {
-    color: '#A497FB',
+    color: '#44005F',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -2040,11 +2040,11 @@ const styles = StyleSheet.create({
   },
   nextAppointmentCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#A497FB',
+    borderLeftColor: '#44005F',
   },
   historyCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#A497FB',
+    borderLeftColor: '#44005F',
   },
 
   cardContent: {
@@ -2185,7 +2185,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   credentialStatusText: {
-    color: '#A497FB',
+    color: '#44005F',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -2287,7 +2287,7 @@ const styles = StyleSheet.create({
     right: 22,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#A497FB', // Use colors.corpadrao se preferir
+    backgroundColor: '#44005F', // Use colors.corpadrao se preferir
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -2328,11 +2328,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#A497FB',
+    backgroundColor: '#44005F',
   },
   activeText: {
     fontSize: 12,
-    color: '#A497FB',
+    color: '#44005F',
     fontWeight: '500',
   },
 
