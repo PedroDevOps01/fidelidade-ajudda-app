@@ -14,7 +14,7 @@ const LightTheme = {
     onSecondary: '#FFFFFF',
     fundo: '#f7f7f7',
         textcolor: '#44005F', //searchbar
-        textcolor1: '#43018E', //searchbar
+        textcolor1: '#F1591E', //searchbar
 
     secondaryContainer: '#44005F', //searchbar
     onSecondaryContainer: '#FFF',

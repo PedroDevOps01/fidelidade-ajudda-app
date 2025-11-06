@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   noAccessTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#7b5cbf',
+    color: '#44005F',
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   infoLabel: {
-    color: '#7b5cbf',
+    color: '#44005F',
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 0.5,
